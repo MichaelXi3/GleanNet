@@ -1,0 +1,47 @@
+.resource-banner {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+  }
+  
+  .resource-banner-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 20px;
+  }
+  
+  .resource-banner-details {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .resource-banner-name {
+    margin: 0;
+    font-size: 24px;
+  }
+  
+  .resource-banner-desc {
+    margin: 5px 0;
+    color: #777;
+  }
+  
+  .resource-banner-info {
+    margin: 2px 0;
+    color: #999;
+    font-size: 14px;
+  }
+  
+  .resource-banner-link {
+    margin-top: 10px;
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .resource-banner-link:hover {
+    color: #0056b3;
+  }
+    
