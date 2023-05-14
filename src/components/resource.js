@@ -27,6 +27,7 @@ export const Resource = ({ resource, onDelete }) => {
       <img src={resource.logoURL} alt={resource.name} />
       <a href={resource.link}>Resource Link</a>
       <p> Upvotes: {resource.upvote} </p>
+      <p> Resource Type: {resource.type} </p>
       <p> Published by: {resource.publisher} </p>
       <p> Release Date: {resource.createDate} </p>
       <p> {resource.longDesc} </p>

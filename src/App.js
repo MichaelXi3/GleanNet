@@ -3,7 +3,9 @@ import './App.css';
 
 import { Auth } from './components/auth'
 import { CreateResource } from './components/createResource';
+
 import { ResourceDetailPage } from './pages/resourceDetailPage';
+import { CreateResourcePage } from './pages/createResourcePage'
 import { NotFoundPage } from './pages/notFoundPage';
 import { Success } from './pages/submitSucessPage';
 import { MainPage } from './pages/mainPage';
@@ -27,7 +29,7 @@ function App() {
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<Auth />} />
-        <Route path="/upload" element={<CreateResource />} />
+        <Route path="/upload" element={<CreateResourcePage />} />
         <Route path="/resources/:id" element={<ResourceDetailPage />} />
         <Route path="*" element={<NotFoundPage />} />
         <Route path="/success" element={<Success />} /> 

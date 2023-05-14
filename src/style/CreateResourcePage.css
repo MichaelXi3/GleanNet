@@ -1,0 +1,11 @@
+.create-resource-page {
+    /* display: flex;
+    flex-direction: column; */
+    align-items: center;
+    padding: 20px;
+}
+
+.create-resource-page h1 {
+    margin-bottom: 20px;
+} 
+    

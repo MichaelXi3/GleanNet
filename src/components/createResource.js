@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore'; 
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { db } from '../config/firebase'; 
+import { db } from '../config/firebase';
+import '../style/CreateResourceComponent.css';
 
 export const CreateResource = () => {
   const [newResourceName, setNewResourceName] = useState("");
@@ -13,7 +14,7 @@ export const CreateResource = () => {
   const [newResourceLogo, setNewResourceLogo] = useState(null);
   const [newResourceScreenshots, setNewResourceScreenshots] = useState([]);
   const [newResourceTags, setNewResourceTags] = useState([]);
-
+  const [newResourceType, setNewResourceType] = useState("");
 
   const resourceCollection = collection(db, "Resources");
   const navigate = useNavigate();
@@ -24,6 +25,12 @@ export const CreateResource = () => {
       const storage = getStorage();
       const newResourceCreateDate = new Date().toISOString().slice(0, 10);
       const newResourceUpvote = 0;
+
+      // Check if all fields filled
+      if (!isFormValid()) {
+        alert("All fields are mandatory!");
+        return;
+      }
       
       // Initialize the Upload of logo to Firebase Storage
       const logoStorageRef = ref(storage, `ResourceLogos/${newResourceLogo.name}`);
@@ -78,7 +85,8 @@ export const CreateResource = () => {
                 upvote: newResourceUpvote,
                 logoURL: logoDownloadURL,
                 imageURL: screenshotDownloadURLs,
-                createDate: newResourceCreateDate
+                createDate: newResourceCreateDate,
+                type: newResourceType
               });
             
               // Add tags as a subcollection
@@ -113,13 +121,33 @@ export const CreateResource = () => {
     setNewResourceTags(e.target.value.split(','));
   }
 
+  const handleDeleteScreenshot = (index) => {
+    setNewResourceScreenshots((prevScreenshots) => {
+      return prevScreenshots.filter((screenshot, i) => i !== index);
+    });
+  };  
+
+  // Validation check before submission
+  const isFormValid = () => {
+    return newResourceName !== "" &&
+      newResourceDesc !== "" &&
+      newResourceLongDesc !== "" &&
+      newResourceLink !== "" &&
+      newResourcePublisher !== "" &&
+      newResourceLogo !== null &&
+      newResourceScreenshots.length > 0 &&
+      newResourceTags.length > 0 &&
+      newResourceType !== "";
+  }
+
   return (
-    <div>
+    <div className='create-resource'>
       <input 
         placeholder='Resource name...'
         value={newResourceName}
         onChange={(e) => setNewResourceName(e.target.value)}
       />
+
       <label>
         Resource logo
         </label>
@@ -127,21 +155,26 @@ export const CreateResource = () => {
         type="file"
         onChange={(e) => setNewResourceLogo(e.target.files[0])}
       />
+      {newResourceLogo && <img src={URL.createObjectURL(newResourceLogo)} alt="logo preview" style={{ width: '100px' }}/>}
+      
       <input 
         placeholder='One sentence description...'
         value={newResourceDesc}
         onChange={(e) => setNewResourceDesc(e.target.value)}
       />
-      <input 
+
+      <input
         placeholder='Detailed description...'
         value={newResourceLongDesc}
         onChange={(e) => setNewResourceLongDesc(e.target.value)}
       />
+
       <input 
         placeholder='Resource Link...'
         value={newResourceLink}
         onChange={(e) => setNewResourceLink(e.target.value)}
       />
+
       <input 
         placeholder='Publisher...'
         value={newResourcePublisher}
@@ -151,6 +184,15 @@ export const CreateResource = () => {
         placeholder='Tags (comma-separated)...'
         onChange={handleTagsChange}
       />
+
+      <select value={newResourceType} onChange={(e) => setNewResourceType(e.target.value)}>
+        <option value="">Select a resource type</option>
+        <option value="website">Website</option>
+        <option value="book">Book</option>
+        <option value="video">Video</option>
+        <option value="twitter-thread">Twitter Thread</option>
+      </select>
+
       <label>
         Screenshots of your resource
       </label>
@@ -159,6 +201,18 @@ export const CreateResource = () => {
         multiple
         onChange={(e) => setNewResourceScreenshots(oldScreenshots => [...oldScreenshots, ...Array.from(e.target.files)])} 
       />
+      {newResourceScreenshots.map((screenshot, index) => (
+        <div className="screenshot-section" key={index}>
+            <img 
+                src={URL.createObjectURL(screenshot)} 
+                alt={screenshot.name} 
+                style={{ width: "200px", height: "auto" }}
+            />
+            <span>{screenshot.name}</span>
+            <button onClick={() => handleDeleteScreenshot(index)}>Delete</button>
+        </div>
+      ))}
+
       <button onClick={onSubmitResource}>Submit</button>
     </div>
   );

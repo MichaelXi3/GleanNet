@@ -1,0 +1,77 @@
+.create-resource {
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: #f0f0f0;
+  margin: 0 auto;
+  max-width: 600px;
+  border-radius: 10px;
+}
+
+.create-resource input, 
+.create-resource select, 
+.create-resource button {
+  margin: 10px 0;
+  padding: 10px;
+  width: 100%;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.create-resource input[type="file"] {
+  border: none;
+  padding: 5px;
+}
+
+.create-resource button {
+  background-color: #007BFF;
+  color: white;
+  cursor: pointer;
+}
+
+.create-resource button:hover {
+  background-color: #0056b3;
+}
+
+.create-resource button:active {
+  background-color: #003580;
+}
+
+.create-resource img {
+  margin-top: 10px;
+  border-radius: 5px;
+}
+
+.create-resource label {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.create-resource .screenshot-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.create-resource .screenshot-section img {
+  max-width: 200px;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.create-resource .screenshot-section button {
+  background-color: #dc3545;
+}
+
+.create-resource .screenshot-section button:hover {
+  background-color: #c82333;
+}
+
+.create-resource .screenshot-section button:active {
+  background-color: #bd2130;
+}

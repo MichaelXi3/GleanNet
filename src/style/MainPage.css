@@ -1,11 +1,11 @@
 .main-page {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-  }
-  
-  .main-page h1 {
-    margin-bottom: 20px;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.main-page h1 {
+  margin-bottom: 20px;
+}
   
