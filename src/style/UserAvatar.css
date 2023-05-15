@@ -1,0 +1,22 @@
+.user-avatar {
+    border-radius: 50%; /* Makes the image round */
+    height: 50px; 
+    width: 50px; 
+    object-fit: cover; /* Ensures the image covers the entire element */
+    cursor: pointer; 
+}
+
+@media (max-width: 600px) {
+    .user-avatar {
+        height: 40px;
+        width: 40px;
+    }
+}
+
+@media (max-width: 400px) {
+    .user-avatar {
+        height: 30px;
+        width: 30px;
+    }
+}
+

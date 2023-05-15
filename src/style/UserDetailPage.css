@@ -1,0 +1,41 @@
+.user-detail-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .user-detail-banner {
+    width: 100%;
+    height: 300px;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-image: url('https://s2.loli.net/2023/05/16/Bk69gPfZESthlX5.png'); 
+    background-size: cover; /* Cover the entire width of the container */
+    background-position: center;  
+    background-repeat: no-repeat;  
+  }
+  
+  .user-detail-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .user-detail-info .user-avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 20px;
+  }
+  
+  .user-detail-info p {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
