@@ -10,8 +10,8 @@ export const ResourceBanner = ({ resource }) => {
         <h2 className="resource-banner-name">{resource.name}</h2>
         <p className="resource-banner-desc">{resource.desc}</p>
         <p className="resource-banner-info">Upvotes: {resource.upvote}</p>
-        <p className="resource-banner-info">Resource type: {resource.type}</p>
-        <p className="resource-banner-info">Published by: {resource.publisher}</p>
+        <p className="resource-banner-info">Type: {resource.type}</p>
+        <p className="resource-banner-info">Author: {resource.publisher}</p>
         <Link to={`/resources/${resource.id}`} className="resource-banner-link">View Details</Link>
       </div>
     </div>

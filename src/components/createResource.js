@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, doc, setDoc } from 'firebase/firestore'; 
+import { collection, addDoc, doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db } from '../config/firebase';
 import '../style/CreateResourceComponent.css';
@@ -13,11 +14,22 @@ export const CreateResource = () => {
   const [newResourcePublisher, setNewResourcePublisher] = useState("");
   const [newResourceLogo, setNewResourceLogo] = useState(null);
   const [newResourceScreenshots, setNewResourceScreenshots] = useState([]);
-  const [newResourceTags, setNewResourceTags] = useState([]);
   const [newResourceType, setNewResourceType] = useState("");
+
+  // Tag related states
+  const [newResourceTags, setNewResourceTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [tagOptions, setTagOptions] = useState([
+    'Computer Security', 'Computer System', 'AI Tool', 'Productivity Tool', 'Web Development',
+    'App Developement', 'Android', 'Linux', 'Backend'
+  ]); 
 
   const resourceCollection = collection(db, "Resources");
   const navigate = useNavigate();
+  const auth = getAuth();
+  const userID = auth.currentUser?.uid;
+  // Handle situation when the user is not logged in
+  if (!userID) { return; }
   
   // Upload the resource to Firestore and Firebase Storage
   const onSubmitResource = async () => {
@@ -86,16 +98,22 @@ export const CreateResource = () => {
                 logoURL: logoDownloadURL,
                 imageURL: screenshotDownloadURLs,
                 createDate: newResourceCreateDate,
-                type: newResourceType
+                type: newResourceType,
+                userID: userID
               });
             
               // Add tags as a subcollection
               const tagsCollectionRef = collection(docRef, "tags");
               newResourceTags.forEach(async (tagName) => {
                   tagName = tagName.trim();
-                  // console.log(tagName);
                   const tagRef = doc(tagsCollectionRef, tagName);
                   await setDoc(tagRef, {}); 
+              });
+
+              // Update user document to add the new resource docID
+              const userDocRef = doc(db, 'users', userID);
+              await updateDoc(userDocRef, {
+                submittedPosts: arrayUnion(docRef.id),
               });
 
               // Clear the input form
@@ -116,9 +134,26 @@ export const CreateResource = () => {
       console.log(err);
     }
   };
-
-  const handleTagsChange = (e) => {
-    setNewResourceTags(e.target.value.split(','));
+  
+  const handleTagChange = (e) => {
+    const tag = e.target.value;
+    setNewResourceTags(newResourceTags => {
+      if (!newResourceTags.includes(tag)) {
+        return [...newResourceTags, tag];
+      }
+      return newResourceTags;
+    });
+    setSelectedTags(selectedTags => {
+      if (!selectedTags.includes(tag)) {
+        return [...selectedTags, tag];
+      }
+      return selectedTags;
+    });
+  }  
+  
+  const removeTag = (tagToRemove) => {
+    setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
+    setNewResourceTags(newResourceTags.filter(tag => tag !== tagToRemove));
   }
 
   const handleDeleteScreenshot = (index) => {
@@ -142,6 +177,9 @@ export const CreateResource = () => {
 
   return (
     <div className='create-resource'>
+      <label>
+        Resource name
+      </label>
       <input 
         placeholder='Resource name...'
         value={newResourceName}
@@ -150,7 +188,7 @@ export const CreateResource = () => {
 
       <label>
         Resource logo
-        </label>
+      </label>
       <input 
         type="file"
         onChange={(e) => setNewResourceLogo(e.target.files[0])}
@@ -176,25 +214,43 @@ export const CreateResource = () => {
       />
 
       <input 
-        placeholder='Publisher...'
+        placeholder='Resource author...'
         value={newResourcePublisher}
         onChange={(e) => setNewResourcePublisher(e.target.value)}
       />
-      <input 
-        placeholder='Tags (comma-separated)...'
-        onChange={handleTagsChange}
-      />
 
+      <label>
+        Resource Tags
+      </label>
+      <select value={selectedTags} onChange={handleTagChange}>
+        <option value="">Select resource tag(s)</option>
+        {tagOptions.map((tag, index) => (
+          <option key={index} value={tag}>{tag}</option>
+        ))}
+      </select>
+
+      <div className="selected-tags-section">
+        {selectedTags.map((tag, index) => (
+          <div className="tag-item" key={index}>
+            <span>{tag}</span>
+            <button onClick={() => removeTag(tag)}>Remove</button>
+          </div>
+        ))}
+      </div>
+      
+      <label>
+        Resource type
+      </label>
       <select value={newResourceType} onChange={(e) => setNewResourceType(e.target.value)}>
         <option value="">Select a resource type</option>
-        <option value="website">Website</option>
-        <option value="book">Book</option>
-        <option value="video">Video</option>
-        <option value="twitter-thread">Twitter Thread</option>
+        <option value="Website">Website</option>
+        <option value="Book">Book</option>
+        <option value="Video">Video</option>
+        <option value="Twitter-thread">Twitter Thread</option>
       </select>
 
       <label>
-        Screenshots of your resource
+        Resource Screenshots
       </label>
       <input 
         type="file"

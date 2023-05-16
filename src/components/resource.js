@@ -1,8 +1,28 @@
-import React from 'react';
-import { doc, deleteDoc, getDocs, collection } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { doc, deleteDoc, getDocs, getDoc, collection } from 'firebase/firestore';
 import { db } from '../config/firebase'; 
 
 export const Resource = ({ resource, onDelete }) => {
+  const [username, setUsername] = useState("");
+
+  // Fetch username
+  useEffect(() => {
+    const fetchUsername = async () => {
+        if (resource.userID) {
+            const userDocRef = doc(db, "users", resource.userID);
+            const userDoc = await getDoc(userDocRef);
+
+            if (userDoc.exists()) {
+                setUsername(userDoc.data().username);
+            } else {
+                console.log("No such user!");
+            }
+        }
+    };
+
+    fetchUsername();
+  }, [resource]);
+
   // Resource deletion
   const deleteResource = async (id) => {
     const resourceDoc = doc(db, "Resources", id);
@@ -28,7 +48,8 @@ export const Resource = ({ resource, onDelete }) => {
       <a href={resource.link}>Resource Link</a>
       <p> Upvotes: {resource.upvote} </p>
       <p> Resource Type: {resource.type} </p>
-      <p> Published by: {resource.publisher} </p>
+      <p> Resource Author: {resource.publisher} </p>
+      <p> Resource Poster: {username}</p>
       <p> Release Date: {resource.createDate} </p>
       <p> {resource.longDesc} </p>
       <div>

@@ -1,4 +1,6 @@
 import { auth, googleAuthProvider } from "../config/firebase"
+import { doc, setDoc } from "firebase/firestore"; 
+import { db } from '../config/firebase';
 import { createUserWithEmailAndPassword, signInWithPopup, signOut, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +11,8 @@ export const Auth = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isRegistering, setIsRegistering] = useState(false);
-    const [error, setError] = useState(""); // New state variable for error
+    const [username, setUsername] = useState(""); 
+    const [error, setError] = useState("");
 
     const navigate = useNavigate();
 
@@ -67,8 +70,20 @@ export const Auth = () => {
     
 
     const register = async () => {
+        // Check if all fields have been filled out
+        if (!username || !email || !password) {
+            alert('All fields must be filled out');
+            return; 
+        }
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            await setDoc(doc(db, "users", user.uid), {
+                email: email,
+                username: username,                
+                photoURL: user.photoURL,
+                submittedPosts: []
+            });
             navigate('/success-register');
         } catch (err) {
             handleError(err);
@@ -84,12 +99,18 @@ export const Auth = () => {
             handleError(err);
             console.log(err);
         }
-    };
+    }
 
     const signInWithGoogle = async () => {
         try {
             await signInWithPopup(auth, googleAuthProvider);
-            console.log("Current Google User: " + auth?.currentUser?.email);
+            const user = auth.currentUser;
+            await setDoc(doc(db, "users", user.uid), {
+                email: user.email,
+                username: user.displayName,
+                photoURL: user.photoURL,
+                submittedPosts: []
+            });
             navigate('/');
         } catch (err) {
             handleError(err);
@@ -119,28 +140,45 @@ export const Auth = () => {
 
     return (
         <div className="auth-container">
-            <input 
-                placeholder="Email"
-                onChange={(e) => setEmail(e.target.value)} 
-            />
-            <input 
-                placeholder="Password"
-                type="password"
-                onChange={(e) => setPassword(e.target.value)}  
-            />
-            {error && <p>{error}</p>}
             {isRegistering ? (
                 <>
-                    <button onClick={register}> Register </button>
+                    <h1> Registration </h1>
+                    <input 
+                        placeholder="Username"
+                        onChange={(e) => setUsername(e.target.value)} 
+                    />
+                    <input 
+                        placeholder="Email"
+                        onChange={(e) => setEmail(e.target.value)} 
+                    />
+                    <input 
+                        placeholder="Password"
+                        type="password"
+                        onChange={(e) => setPassword(e.target.value)}  
+                    />
+                    {error && <p>{error}</p>}
+                    <button onClick={register}> Register </button> 
                     <button onClick={() => setIsRegistering(false)}> Already have an account? </button>
                 </>
             ) : (
                 <>
+                    <h1> Log In </h1>
+                    <input 
+                        placeholder="Email"
+                        onChange={(e) => setEmail(e.target.value)} 
+                    />
+                    <input 
+
+                        placeholder="Password"
+                        type="password"
+                        onChange={(e) => setPassword(e.target.value)}  
+                    />
+                    {error && <p>{error}</p>}
                     <button onClick={logIn}> Login </button>
                     <button onClick={signInWithGoogle}> Sign In With Google </button>
-                    <button onClick={logOut}> Logout </button>
                     <button onClick={forgotPassword}> Forgot password? </button>
                     <button onClick={() => setIsRegistering(true)}> Don't have an account? </button>
+                    <button onClick={logOut}> Logout </button>
                 </>
             )} 
         </div>
