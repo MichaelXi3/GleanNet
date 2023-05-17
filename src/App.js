@@ -5,7 +5,8 @@ import { Auth } from './components/auth'
 import { UserAvatar } from './components/userAvatar';
 
 import { ResourceDetailPage } from './pages/resourceDetailPage';
-import { CreateResourcePage } from './pages/createResourcePage'
+import { CreateResourcePage } from './pages/createResourcePage';
+import { UpdateResourcePage } from './pages/updateResourcePage';
 import { NotFoundPage } from './pages/notFoundPage';
 import { Success } from './pages/submitSucessPage';
 import { RegisterSuccess } from './pages/registrationSuccessPage';
@@ -34,6 +35,7 @@ function App() {
         <Route path="/login" element={<Auth />} />
         <Route path="/user-detail" element={<UserDetail />} />
         <Route path="/upload" element={<CreateResourcePage />} />
+        <Route path="/update/:id" element={<UpdateResourcePage />} />
         <Route path="/resources/:id" element={<ResourceDetailPage />} />
         <Route path="*" element={<NotFoundPage />} />
         <Route path="/success" element={<Success />} /> 

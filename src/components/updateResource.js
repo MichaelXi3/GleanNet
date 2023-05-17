@@ -1,22 +1,28 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { collection, doc, setDoc, updateDoc, arrayUnion, getDoc, getDocs } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db } from '../config/firebase';
 import '../style/CreateResourceComponent.css';
 
-export const CreateResource = () => {
+export const UpdateResource = () => {
+  // Get current resource id from URL
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const auth = getAuth();
+  const userID = auth.currentUser?.uid;  
+
   const [newResourceName, setNewResourceName] = useState("");
   const [newResourceDesc, setNewResourceDesc] = useState("");
   const [newResourceLongDesc, setNewResourceLongDesc] = useState("");
   const [newResourceLink, setNewResourceLink] = useState("");
   const [newResourcePublisher, setNewResourcePublisher] = useState("");
   const [newResourceLogo, setNewResourceLogo] = useState(null);
+  const [oldResourceLogo, setOldResourceLogo] = useState(null); 
   const [newResourceScreenshots, setNewResourceScreenshots] = useState([]);
+  const [oldResourceScreenshots, setOldResourceScreenshots] = useState([]); 
   const [newResourceType, setNewResourceType] = useState("");
-
-  // Tag related states
   const [newResourceTags, setNewResourceTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagOptions, setTagOptions] = useState([
@@ -25,19 +31,50 @@ export const CreateResource = () => {
   ]); 
 
   const resourceCollection = collection(db, "Resources");
-  const navigate = useNavigate();
-  const auth = getAuth();
-  const userID = auth.currentUser?.uid;
+  const storage = getStorage();
+  
+  // Fetch resource data from database
+  useEffect(() => {
+    const getResourceData = async () => {
+      const resourceRef = doc(db, 'Resources', id);
+      const resourceDoc = await getDoc(resourceRef);
+
+      // Get 'tags' subcollection
+      const tagsCollectionRef = collection(resourceRef, 'tags');
+      getDocs(tagsCollectionRef).then((querySnapshot) => {
+        const tags = querySnapshot.docs.map(doc => doc.id); 
+        setNewResourceTags({ tags }); 
+      });
+
+      if (resourceDoc.exists()) {
+        const data = resourceDoc.data();
+        if (data) {
+          setNewResourceName(data.name);
+          setNewResourceDesc(data.desc);
+          setNewResourceLongDesc(data.longDesc);
+          setNewResourceLink(data.link);
+          setNewResourcePublisher(data.publisher);
+          setOldResourceLogo(data.logoURL);
+          // todo
+          setOldResourceScreenshots(data.imageURL);
+          setNewResourceType(data.type);
+        } else {
+          console.log('Resource document exists, but no data found!');
+        }
+      } else {
+        console.log('No such resource document!');
+      }
+    };
+
+    getResourceData();
+  }, [id]);
+
   // Handle situation when the user is not logged in
   if (!userID) { return; }
-  
-  // Upload the resource to Firestore and Firebase Storage
-  const onSubmitResource = async () => {
-    try {
-      const storage = getStorage();
-      const newResourceCreateDate = new Date().toISOString().slice(0, 10);
-      const newResourceUpvote = 0;
 
+  // Update resource information
+  const onUpdateResource = async () => {
+    try {
       // Check if all fields filled
       if (!isFormValid()) {
         alert("All fields are mandatory!");
@@ -47,8 +84,6 @@ export const CreateResource = () => {
       // Initialize the Upload of logo to Firebase Storage
       const logoStorageRef = ref(storage, `ResourceLogos/${newResourceLogo.name}`);
       const logoUploadTask = uploadBytesResumable(logoStorageRef, newResourceLogo);
-
-      console.log(newResourceScreenshots);
 
       // Initialize the Upload of resource screenshots to Firebase Storage
       const screenshotUploadTasks = newResourceScreenshots.map((screenshot, i) => {
@@ -88,18 +123,15 @@ export const CreateResource = () => {
             // Handle resource screenshots images URL by 'Promise.all' - multiple images
             Promise.all(screenshotUploadTasks).then(async (screenshotDownloadURLs) => {
               // Add the new resource to Firestore, including the screenshots URL and tags
-              const docRef = await addDoc(resourceCollection, {
+              const docRef = await updateDoc(resourceCollection, {
                 name: newResourceName,
                 desc: newResourceDesc,
                 longDesc: newResourceLongDesc,
                 link: newResourceLink,
                 publisher: newResourcePublisher,
-                upvote: newResourceUpvote,
                 logoURL: logoDownloadURL,
                 imageURL: screenshotDownloadURLs,
-                createDate: newResourceCreateDate,
                 type: newResourceType,
-                userID: userID
               });
             
               // Add tags as a subcollection
@@ -134,7 +166,7 @@ export const CreateResource = () => {
       console.log(err);
     }
   };
-  
+
   const handleTagChange = (e) => {
     const tag = e.target.value;
     setNewResourceTags(newResourceTags => {
@@ -149,8 +181,8 @@ export const CreateResource = () => {
       }
       return selectedTags;
     });
-  }  
-  
+  }
+
   const removeTag = (tagToRemove) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
     setNewResourceTags(newResourceTags.filter(tag => tag !== tagToRemove));
@@ -160,7 +192,7 @@ export const CreateResource = () => {
     setNewResourceScreenshots((prevScreenshots) => {
       return prevScreenshots.filter((screenshot, i) => i !== index);
     });
-  };  
+  };
 
   // Validation check before submission
   const isFormValid = () => {
@@ -189,7 +221,7 @@ export const CreateResource = () => {
   const handleScreenshotChange = (e) => {
     const files = Array.from(e.target.files);
 
-    if (newResourceScreenshots.length + files.length > 3) {
+    if (newResourceScreenshots.length + oldResourceScreenshots.length + files.length > 3) {
       alert("You can only upload up to 3 screenshots!");
       return;
     }
@@ -200,102 +232,112 @@ export const CreateResource = () => {
     setNewResourceScreenshots(oldScreenshots => [...oldScreenshots, ...Array.from(files)]);
   }
 
-
   return (
     <div className='create-resource'>
-      <label>
-        Resource name
-      </label>
-      <input 
-        placeholder='Resource name...'
-        value={newResourceName}
-        onChange={(e) => setNewResourceName(e.target.value)}
-      />
+    <label>
+      Resource name
+    </label>
+    <input 
+      placeholder='Resource name...'
+      value={newResourceName}
+      onChange={(e) => setNewResourceName(e.target.value)}
+    />
 
-      <label>
-        Resource logo
-      </label>
-      <input 
-        type="file"
-        onChange={handleLogoChange}
-      />
-      {newResourceLogo && <img src={URL.createObjectURL(newResourceLogo)} alt="logo preview" style={{ width: '100px' }}/>}
-      
-      <input 
-        placeholder='One sentence description...'
-        value={newResourceDesc}
-        onChange={(e) => setNewResourceDesc(e.target.value)}
-      />
+    <label>
+      Resource logo
+    </label>
+    <input 
+      type="file"
+      onChange={handleLogoChange}
+    />
+    {newResourceLogo && <img src={newResourceLogo} alt="logo preview" style={{ width: '100px' }}/>} 
+    
+    <input 
+      placeholder='One sentence description...'
+      value={newResourceDesc}
+      onChange={(e) => setNewResourceDesc(e.target.value)}
+    />
 
-      <input
-        placeholder='Detailed description...'
-        value={newResourceLongDesc}
-        onChange={(e) => setNewResourceLongDesc(e.target.value)}
-      />
+    <input
+      placeholder='Detailed description...'
+      value={newResourceLongDesc}
+      onChange={(e) => setNewResourceLongDesc(e.target.value)}
+    />
 
-      <input 
-        placeholder='Resource Link...'
-        value={newResourceLink}
-        onChange={(e) => setNewResourceLink(e.target.value)}
-      />
+    <input 
+      placeholder='Resource Link...'
+      value={newResourceLink}
+      onChange={(e) => setNewResourceLink(e.target.value)}
+    />
 
-      <input 
-        placeholder='Resource author...'
-        value={newResourcePublisher}
-        onChange={(e) => setNewResourcePublisher(e.target.value)}
-      />
+    <input 
+      placeholder='Resource author...'
+      value={newResourcePublisher}
+      onChange={(e) => setNewResourcePublisher(e.target.value)}
+    />
 
-      <label>
-        Resource Tags
-      </label>
-      <select value={selectedTags} onChange={handleTagChange}>
-        <option value="">Select resource tag(s)</option>
-        {tagOptions.map((tag, index) => (
-          <option key={index} value={tag}>{tag}</option>
-        ))}
-      </select>
+    <label>
+      Resource Tags
+    </label>
+    <select value={selectedTags} onChange={handleTagChange}>
+      <option value="">Select resource tag(s)</option>
+      {tagOptions.map((tag, index) => (
+        <option key={index} value={tag}>{tag}</option>
+      ))}
+    </select>
 
-      <div className="selected-tags-section">
-        {selectedTags.map((tag, index) => (
-          <div className="tag-item" key={index}>
-            <span>{tag}</span>
-            <button onClick={() => removeTag(tag)}>Remove</button>
-          </div>
-        ))}
-      </div>
-      
-      <label>
-        Resource type
-      </label>
-      <select value={newResourceType} onChange={(e) => setNewResourceType(e.target.value)}>
-        <option value="">Select a resource type</option>
-        <option value="Website">Website</option>
-        <option value="Book">Book</option>
-        <option value="Video">Video</option>
-        <option value="Twitter-thread">Twitter Thread</option>
-      </select>
-
-      <label>
-        Resource Screenshots
-      </label>
-      <input 
-        type="file"
-        multiple
-        onChange={handleScreenshotChange} 
-      />
-      {newResourceScreenshots.map((screenshot, index) => (
-        <div className="screenshot-section" key={index}>
-            <img 
-                src={URL.createObjectURL(screenshot)} 
-                alt={screenshot.name} 
-                style={{ width: "200px", height: "auto" }}
-            />
-            <span>{screenshot.name}</span>
-            <button onClick={() => handleDeleteScreenshot(index)}>Delete</button>
+    <div className="selected-tags-section">
+      {selectedTags.map((tag, index) => (
+        <div className="tag-item" key={index}>
+          <span>{tag}</span>
+          <button onClick={() => removeTag(tag)}>Remove</button>
         </div>
       ))}
-
-      <button onClick={onSubmitResource}>Submit</button>
     </div>
+    
+    <label>
+      Resource type
+    </label>
+    <select value={newResourceType} onChange={(e) => setNewResourceType(e.target.value)}>
+      <option value="">Select a resource type</option>
+      <option value="Website">Website</option>
+      <option value="Book">Book</option>
+      <option value="Video">Video</option>
+      <option value="Twitter-thread">Twitter Thread</option>
+    </select>
+
+    <label>
+      Resource Screenshots
+    </label>
+    <input 
+      type="file"
+      multiple
+      onChange={handleScreenshotChange} 
+    />
+    {/* Previous Uploaded Screenshots Preview*/}
+    {oldResourceScreenshots.map((screenshot, index) => (
+      <div className="screenshot-section" key={index}>
+          <img 
+              src={screenshot} 
+              style={{ width: "200px", height: "auto" }}
+          />
+          <span>{screenshot.name}</span>
+          <button onClick={() => handleDeleteScreenshot(index)}>Delete</button>
+      </div>
+    ))}
+    {/* Newly Uploaded Screenshots Preview */}
+    {newResourceScreenshots.map((screenshot, index) => (
+      <div className="screenshot-section" key={index}>
+          <img 
+              src={URL.createObjectURL(screenshot)}
+              style={{ width: "200px", height: "auto" }}
+          />
+          <span>{screenshot.name}</span>
+          <button onClick={() => handleDeleteScreenshot(index)}>Delete</button>
+      </div>
+    ))}
+
+    <button onClick={onUpdateResource}>Submit</button>
+  </div>
   );
 };

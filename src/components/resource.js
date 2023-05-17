@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { doc, deleteDoc, getDocs, getDoc, collection } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../config/firebase'; 
 
 export const Resource = ({ resource, onDelete }) => {
   const [username, setUsername] = useState("");
+  const navigate = useNavigate();
 
   // Fetch username
   useEffect(() => {
@@ -39,6 +41,10 @@ export const Resource = ({ resource, onDelete }) => {
     onDelete(id);
   }
 
+  const goToUpdateResource = (id) => {
+    navigate(`/update/${id}`);
+  };
+
   return (
     <div key={resource.id}>
       <h1> {resource.name} </h1>
@@ -59,6 +65,7 @@ export const Resource = ({ resource, onDelete }) => {
       </div>
 
       <button onClick={() => deleteResource(resource.id)}> Delete </button>
+      <button onClick={() => goToUpdateResource(resource.id)}> Update </button>
     </div>
   );
 }
