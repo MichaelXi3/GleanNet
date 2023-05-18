@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { collection, doc, setDoc, updateDoc, arrayUnion, getDoc, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, updateDoc, arrayUnion, getDoc, getDocs } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db } from '../config/firebase';
@@ -18,11 +18,14 @@ export const UpdateResource = () => {
   const [newResourceLongDesc, setNewResourceLongDesc] = useState("");
   const [newResourceLink, setNewResourceLink] = useState("");
   const [newResourcePublisher, setNewResourcePublisher] = useState("");
+  const [newResourceType, setNewResourceType] = useState("");
+
   const [newResourceLogo, setNewResourceLogo] = useState(null);
   const [oldResourceLogo, setOldResourceLogo] = useState(null); 
+
   const [newResourceScreenshots, setNewResourceScreenshots] = useState([]);
   const [oldResourceScreenshots, setOldResourceScreenshots] = useState([]); 
-  const [newResourceType, setNewResourceType] = useState("");
+
   const [newResourceTags, setNewResourceTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagOptions, setTagOptions] = useState([
@@ -30,7 +33,6 @@ export const UpdateResource = () => {
     'App Developement', 'Android', 'Linux', 'Backend'
   ]); 
 
-  const resourceCollection = collection(db, "Resources");
   const storage = getStorage();
   
   // Fetch resource data from database
@@ -43,9 +45,10 @@ export const UpdateResource = () => {
       const tagsCollectionRef = collection(resourceRef, 'tags');
       getDocs(tagsCollectionRef).then((querySnapshot) => {
         const tags = querySnapshot.docs.map(doc => doc.id); 
-        setNewResourceTags({ tags }); 
+        setNewResourceTags(tags); 
+        setSelectedTags(tags); 
       });
-
+      
       if (resourceDoc.exists()) {
         const data = resourceDoc.data();
         if (data) {
@@ -54,10 +57,9 @@ export const UpdateResource = () => {
           setNewResourceLongDesc(data.longDesc);
           setNewResourceLink(data.link);
           setNewResourcePublisher(data.publisher);
-          setOldResourceLogo(data.logoURL);
-          // todo
-          setOldResourceScreenshots(data.imageURL);
           setNewResourceType(data.type);
+          setOldResourceLogo(data.logoURL);
+          setOldResourceScreenshots(data.imageURL);
         } else {
           console.log('Resource document exists, but no data found!');
         }
@@ -80,91 +82,121 @@ export const UpdateResource = () => {
         alert("All fields are mandatory!");
         return;
       }
+  
+      let logoDownloadURL;
+      if (newResourceLogo) {
+        // Initialize the Upload of logo to Firebase Storage
+        const logoStorageRef = ref(storage, `ResourceLogos/${newResourceLogo.name}`);
+        const logoUploadTask = uploadBytesResumable(logoStorageRef, newResourceLogo);
+        logoDownloadURL = await uploadLogo(logoUploadTask);
+      }
+  
+      let screenshotDownloadURLs;
+      if (newResourceScreenshots.length > 0) {
+        // Initialize the Upload of resource screenshots to Firebase Storage
+        const screenshotUploadTasks = newResourceScreenshots.map((screenshot, i) => {
+          const screenshotStorageRef = ref(storage, `ResourceImages/${screenshot.name}-${i}`);
+          const screenshotUploadTask = uploadBytesResumable(screenshotStorageRef, screenshot);
+          return uploadScreenshot(screenshotUploadTask);
+        });
+  
+        screenshotDownloadURLs = await Promise.all(screenshotUploadTasks);
+      }
+  
+      // Resource data object 
+      const resourceData = {
+        name: newResourceName,
+        desc: newResourceDesc,
+        longDesc: newResourceLongDesc,
+        link: newResourceLink,
+        publisher: newResourcePublisher,
+        type: newResourceType,
+      };
       
-      // Initialize the Upload of logo to Firebase Storage
-      const logoStorageRef = ref(storage, `ResourceLogos/${newResourceLogo.name}`);
-      const logoUploadTask = uploadBytesResumable(logoStorageRef, newResourceLogo);
-
-      // Initialize the Upload of resource screenshots to Firebase Storage
-      const screenshotUploadTasks = newResourceScreenshots.map((screenshot, i) => {
-        const screenshotStorageRef = ref(storage, `ResourceImages/${screenshot.name}-${i}`);
-        const screenshotUploadTask = uploadBytesResumable(screenshotStorageRef, screenshot);
-        return new Promise(( resolve, reject ) => {
-            screenshotUploadTask.on('state_changed',
-              (snapshot) => {
-              }, 
-              (error) => {
-                console.log(error);
-              }, 
-              async () => {
-                getDownloadURL(screenshotUploadTask.snapshot.ref).then((screenshotDownloadURL) => {
-                    console.log('Screenshot URL is: ', screenshotDownloadURL);
-                    resolve(screenshotDownloadURL);
-                }).catch(reject);
-              },
-              reject
-            );
-          });
-       });
+      // If user uploads the logo image
+      if (logoDownloadURL) {
+        resourceData.logoURL = logoDownloadURL;
+      }
       
-      // Upload tasks begin
-      logoUploadTask.on('state_changed', 
-        (snapshot) => {
-          // console.log(snapshot);
-        }, 
-        (error) => {
-          console.log(error);
-        }, 
-        async () => {
-            // Handle logo image URL - one image
-            const logoDownloadURL = await getDownloadURL(logoUploadTask.snapshot.ref);
-            console.log('Resource Logo URL is: ', logoDownloadURL);
+      // If user uploads new resource screenshots
+      if (screenshotDownloadURLs) {
+        resourceData.imageURL = [...oldResourceScreenshots, ...screenshotDownloadURLs];
+      } else {
+        // If user didn't upload new resource screenshots, and only delete existed screenshots
+        resourceData.imageURL = [...oldResourceScreenshots];
+      }
 
-            // Handle resource screenshots images URL by 'Promise.all' - multiple images
-            Promise.all(screenshotUploadTasks).then(async (screenshotDownloadURLs) => {
-              // Add the new resource to Firestore, including the screenshots URL and tags
-              const docRef = await updateDoc(resourceCollection, {
-                name: newResourceName,
-                desc: newResourceDesc,
-                longDesc: newResourceLongDesc,
-                link: newResourceLink,
-                publisher: newResourcePublisher,
-                logoURL: logoDownloadURL,
-                imageURL: screenshotDownloadURLs,
-                type: newResourceType,
-              });
-            
-              // Add tags as a subcollection
-              const tagsCollectionRef = collection(docRef, "tags");
-              newResourceTags.forEach(async (tagName) => {
-                  tagName = tagName.trim();
-                  const tagRef = doc(tagsCollectionRef, tagName);
-                  await setDoc(tagRef, {}); 
-              });
+      const docRef = doc(db, "Resources", id);
+      await updateDoc(docRef, resourceData);
+      
+      // Update the tags of resource
+      const currentTags = await getCurrentTags(docRef);
+      const tagsToAdd = newResourceTags.filter(tag => !currentTags.includes(tag));
+      const tagsCollectionRef = collection(docRef, "tags");
 
-              // Update user document to add the new resource docID
-              const userDocRef = doc(db, 'users', userID);
-              await updateDoc(userDocRef, {
-                submittedPosts: arrayUnion(docRef.id),
-              });
-
-              // Clear the input form
-              setNewResourceName("");
-              setNewResourceDesc("");
-              setNewResourceLongDesc("");
-              setNewResourceLink("");
-              setNewResourcePublisher("");
-              setNewResourceTags([]);
-              setNewResourceScreenshots([]);
-              setNewResourceLogo(null);
-            }).catch(console.error);
+      // Delete tag docs not included in newResourceTags
+      for (let oldTag of currentTags) {
+        if (!newResourceTags.includes(oldTag)) {
+          const tagRef = doc(tagsCollectionRef, oldTag);
+          await deleteDoc(tagRef);
         }
-      );
+      }
+      // Add newly added tags
+      for (const tag of tagsToAdd) {
+        const tagRef = doc(tagsCollectionRef, tag);
+        await setDoc(tagRef, {}); // Create an empty doc for the new tag
+      } 
+  
+      // Clear the input form
+      setNewResourceName("");
+      setNewResourceDesc("");
+      setNewResourceLongDesc("");
+      setNewResourceLink("");
+      setNewResourcePublisher("");
+      setNewResourceTags([]);
+      setNewResourceScreenshots([]);
+      setNewResourceLogo(null);
+  
       // Push to success page
       navigate('/success');
     } catch (err) {
       console.log(err);
     }
+  };
+  
+  const uploadLogo = async (logoUploadTask) => {
+    return new Promise((resolve, reject) => {
+      logoUploadTask.on('state_changed',
+        (snapshot) => {},
+        (error) => reject(error),
+        async () => {
+          const logoDownloadURL = await getDownloadURL(logoUploadTask.snapshot.ref);
+          console.log('Resource Logo URL is: ', logoDownloadURL);
+          resolve(logoDownloadURL);
+        }
+      );
+    });
+  }
+  
+  const uploadScreenshot = async (screenshotUploadTask) => {
+    return new Promise((resolve, reject) => {
+      screenshotUploadTask.on('state_changed',
+        (snapshot) => {},
+        (error) => reject(error),
+        async () => {
+          const screenshotDownloadURL = await getDownloadURL(screenshotUploadTask.snapshot.ref);
+          console.log('Screenshot URL is: ', screenshotDownloadURL);
+          resolve(screenshotDownloadURL);
+        }
+      );
+    });
+  }  
+
+  const getCurrentTags = async (docRef) => {
+    const tagsCollectionRef = collection(docRef, "tags");
+    const querySnapshot = await getDocs(tagsCollectionRef);
+    const currentTags = querySnapshot.docs.map(doc => doc.id);
+    return currentTags;
   };
 
   const handleTagChange = (e) => {
@@ -188,7 +220,24 @@ export const UpdateResource = () => {
     setNewResourceTags(newResourceTags.filter(tag => tag !== tagToRemove));
   }
 
-  const handleDeleteScreenshot = (index) => {
+  const handleDeleteOldScreenshot = (index) => {
+    // Prevent delete to zero screenshot
+    if (newResourceScreenshots.length + oldResourceScreenshots.length == 1) {
+      alert("You must have at least one screenshot!");
+      return;
+    }
+
+    setOldResourceScreenshots((prevScreenshots) => {
+      return prevScreenshots.filter((screenshot, i) => i !== index);
+    });
+  };
+
+  const handleDeleteNewScreenshot = (index) => {
+    // Prevent delete to zero screenshot
+    if (newResourceScreenshots.length + oldResourceScreenshots.length == 1) {
+      alert("You must have at least one screenshot!");
+      return;
+    }
     setNewResourceScreenshots((prevScreenshots) => {
       return prevScreenshots.filter((screenshot, i) => i !== index);
     });
@@ -201,8 +250,6 @@ export const UpdateResource = () => {
       newResourceLongDesc !== "" &&
       newResourceLink !== "" &&
       newResourcePublisher !== "" &&
-      newResourceLogo !== null &&
-      newResourceScreenshots.length > 0 &&
       newResourceTags.length > 0 &&
       newResourceType !== "";
   }
@@ -225,6 +272,7 @@ export const UpdateResource = () => {
       alert("You can only upload up to 3 screenshots!");
       return;
     }
+
     if (files.some(file => file.size > 5 * 1024 * 1024)) { // 5MB
       alert("Screenshot file size exceeds 5MB!");
       return;
@@ -250,7 +298,11 @@ export const UpdateResource = () => {
       type="file"
       onChange={handleLogoChange}
     />
-    {newResourceLogo && <img src={newResourceLogo} alt="logo preview" style={{ width: '100px' }}/>} 
+    {newResourceLogo ? (
+      <img src={URL.createObjectURL(newResourceLogo)} alt="new logo preview" style={{ width: '100px' }}/>
+    ) : (
+      oldResourceLogo && <img src={oldResourceLogo} alt="old logo preview" style={{ width: '100px' }}/>
+    )}
     
     <input 
       placeholder='One sentence description...'
@@ -322,7 +374,7 @@ export const UpdateResource = () => {
               style={{ width: "200px", height: "auto" }}
           />
           <span>{screenshot.name}</span>
-          <button onClick={() => handleDeleteScreenshot(index)}>Delete</button>
+          <button onClick={() => handleDeleteOldScreenshot(index)}>Delete</button>
       </div>
     ))}
     {/* Newly Uploaded Screenshots Preview */}
@@ -333,7 +385,7 @@ export const UpdateResource = () => {
               style={{ width: "200px", height: "auto" }}
           />
           <span>{screenshot.name}</span>
-          <button onClick={() => handleDeleteScreenshot(index)}>Delete</button>
+          <button onClick={() => handleDeleteNewScreenshot(index)}>Delete</button>
       </div>
     ))}
 
