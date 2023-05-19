@@ -1,0 +1,25 @@
+.category-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border: 1px solid #eee;
+    margin: 10px 0;
+    border-radius: 5px;
+  }
+  
+  .category-banner-details {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .category-banner-name {
+    margin: 0;
+    font-size: 24px;
+  }
+  
+  .category-banner-link {
+    color: blue;
+    text-decoration: none;
+  }
+  

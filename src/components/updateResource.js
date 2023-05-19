@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { collection, doc, setDoc, deleteDoc, updateDoc, arrayUnion, getDoc, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, updateDoc, arrayUnion, getDoc, getDocs, arrayRemove } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db } from '../config/firebase';
@@ -132,19 +132,34 @@ export const UpdateResource = () => {
       // Update the tags of resource
       const currentTags = await getCurrentTags(docRef);
       const tagsToAdd = newResourceTags.filter(tag => !currentTags.includes(tag));
+      const tagsToDelete = currentTags.filter(tag => !newResourceTags.includes(tag));
+
       const tagsCollectionRef = collection(docRef, "tags");
 
       // Delete tag docs not included in newResourceTags
-      for (let oldTag of currentTags) {
-        if (!newResourceTags.includes(oldTag)) {
-          const tagRef = doc(tagsCollectionRef, oldTag);
-          await deleteDoc(tagRef);
-        }
+      for (let oldTag of tagsToDelete) {
+        // Update the tag subcollection under resource doc
+        const tagRef = doc(tagsCollectionRef, oldTag);
+        await deleteDoc(tagRef);
+
+        // Update corresponding doc in the Tags collection
+        const tagDocRef = doc(db, 'Tags', oldTag);
+        await updateDoc(tagDocRef, {
+            resources: arrayRemove(docRef.id),
+        });
       }
+
       // Add newly added tags
       for (const tag of tagsToAdd) {
+        // Update the tag subcollection under resource doc
         const tagRef = doc(tagsCollectionRef, tag);
         await setDoc(tagRef, {}); // Create an empty doc for the new tag
+
+        // Update corresponding doc in the Tags collection
+        const tagDocRef = doc(db, 'Tags', tag);
+        await setDoc(tagDocRef, {
+          resources: arrayUnion(docRef.id),
+        }, { merge: true });
       } 
   
       // Clear the input form

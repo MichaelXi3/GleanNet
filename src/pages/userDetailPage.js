@@ -28,7 +28,10 @@ export const UserDetail = () => {
           // Fetch the resources that the user has created
           const resourceDocs = await Promise.all(submittedPosts.map(async (postId) => {
             const postDoc = await getDoc(doc(db, "Resources", postId));
-            return postDoc.data();
+            return {
+              ...postDoc.data(),
+              id: postId,
+            };
           }));
 
           setResources(resourceDocs);

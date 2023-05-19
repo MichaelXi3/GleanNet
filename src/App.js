@@ -11,6 +11,8 @@ import { NotFoundPage } from './pages/notFoundPage';
 import { Success } from './pages/submitSucessPage';
 import { RegisterSuccess } from './pages/registrationSuccessPage';
 import { UserDetail } from './pages/userDetailPage';
+import { CategoriesPage } from './pages/categoriesPage';
+import { ResourceListByCategory } from './components/resourceListByCategory';
 import { MainPage } from './pages/mainPage';
 
 function App() {
@@ -25,6 +27,9 @@ function App() {
             <Link to="/login"> LogIn </Link>
           </li>
           <li>
+            <Link to="/categories"> Categories </Link>
+          </li>
+          <li>
             <Link to="/upload"> CreateResource </Link>
           </li>
         </ul>
@@ -33,6 +38,8 @@ function App() {
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<Auth />} />
+        <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/categories/:category" element={<ResourceListByCategory />} />
         <Route path="/user-detail" element={<UserDetail />} />
         <Route path="/upload" element={<CreateResourcePage />} />
         <Route path="/update/:id" element={<UpdateResourcePage />} />

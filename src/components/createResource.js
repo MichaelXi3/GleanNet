@@ -102,12 +102,18 @@ export const CreateResource = () => {
                 userID: userID
               });
             
-              // Add tags as a subcollection
+              // Add tags as a subcollection of resource doc & create tag docs
               const tagsCollectionRef = collection(docRef, "tags");
               newResourceTags.forEach(async (tagName) => {
                   tagName = tagName.trim();
                   const tagRef = doc(tagsCollectionRef, tagName);
                   await setDoc(tagRef, {}); 
+
+                  // Add resource to tag document in the Tags collection at top level
+                  const tagDocRef = doc(db, 'Tags', tagName);
+                  await setDoc(tagDocRef, {
+                    resources: arrayUnion(docRef.id),
+                  }, { merge: true }); 
               });
 
               // Update user document to add the new resource docID
