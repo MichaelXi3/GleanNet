@@ -1,12 +1,18 @@
 .resource-banner {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   padding: 20px;
   border-bottom: 1px solid #ddd;
   margin-bottom: 10px;
+  flex-wrap: wrap;
+  width: 80%;         /* Set the width to 80% of the parent's width */
+  max-width: 1200px;  /* Set a max-width to avoid the banner becoming too wide on large screens */
+  margin: 0 auto;     /* Center the banner */
 }
 
 .resource-banner-logo {
+  flex: 0 0 auto;
   width: 100px;
   height: 100px;
   object-fit: cover;
@@ -15,8 +21,12 @@
 }
 
 .resource-banner-details {
+  flex-grow: 1;
+  flex-basis: 0;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .resource-banner-name {
@@ -24,14 +34,13 @@
   font-size: 24px;
 }
 
-.resource-banner-desc {
+.resource-banner-desc,
+.resource-banner-info {
   margin: 5px 0;
   color: #777;
 }
 
 .resource-banner-info {
-  margin: 2px 0;
-  color: #999;
   font-size: 14px;
 }
 
@@ -44,4 +53,17 @@
 .resource-banner-link:hover {
   color: #0056b3;
 }
-  
+
+.resource-banner button {
+  margin-left: auto;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #f0f0f0;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.resource-banner button:hover {
+  background-color: #e0e0f0;
+}

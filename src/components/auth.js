@@ -82,7 +82,8 @@ export const Auth = () => {
                 email: email,
                 username: username,                
                 photoURL: user.photoURL,
-                submittedPosts: []
+                submittedPosts: [],
+                pendingPosts: []
             });
             navigate('/success-register');
         } catch (err) {

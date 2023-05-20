@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { collection, doc, setDoc, deleteDoc, updateDoc, arrayUnion, getDoc, getDocs, arrayRemove } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, updateDoc, arrayUnion, getDoc, getDocs, arrayRemove, addDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db } from '../config/firebase';
 import '../style/CreateResourceComponent.css';
+import userEvent from '@testing-library/user-event';
 
-export const UpdateResource = () => {
+export const ResourceReviewPageAdmin = () => {
   // Get current resource id from URL
   const { id } = useParams();
   const navigate = useNavigate();
-  const auth = getAuth();
-  const userID = auth.currentUser?.uid;  
+  const delay = ms => new Promise(res => setTimeout(res, ms));
+  const storage = getStorage();
 
   const [newResourceName, setNewResourceName] = useState("");
   const [newResourceDesc, setNewResourceDesc] = useState("");
@@ -19,18 +20,21 @@ export const UpdateResource = () => {
   const [newResourceLink, setNewResourceLink] = useState("");
   const [newResourcePublisher, setNewResourcePublisher] = useState("");
   const [newResourceType, setNewResourceType] = useState("");
+  const [newResourceUserID, setNewResourceUserID] = useState("");
+  const [newResourceCreateDate, setNewResourceCreateDate] = useState("");
+  const [newResourceUpvote, setNewResourceUpvote] = useState(0);
 
   const [newResourceLogo, setNewResourceLogo] = useState(null);
-  const [oldResourceLogo, setOldResourceLogo] = useState(null); 
+  const [newResourceLogoURL, setNewResourceLogoURL] = useState("");
+  const [oldResourceLogo, setOldResourceLogo] = useState(""); 
 
-  const [newResourceScreenshots, setNewResourceScreenshots] = useState([]);
-  const [oldResourceScreenshots, setOldResourceScreenshots] = useState([]); 
+  const [newResourceScreenshots, setNewResourceScreenshots] = useState([]);        // File Objects
+  const [newResourceScreenshotsURL, setNewResourceScreenshotsURL] = useState([]);  // String URLs
+  const [oldResourceScreenshots, setOldResourceScreenshots] = useState([]);        // String URLs
 
   const [newResourceTags, setNewResourceTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagOptions, setTagOptions] = useState([]); 
-
-  const storage = getStorage();
 
   // Get all tag names from Firestore
   useEffect(() => {
@@ -48,21 +52,13 @@ export const UpdateResource = () => {
 
     getTags();
   }, []);
-  
+
   // Fetch resource data from database
   useEffect(() => {
     const getResourceData = async () => {
-      const resourceRef = doc(db, 'Resources', id);
+      const resourceRef = doc(db, 'PendingResources', id);
       const resourceDoc = await getDoc(resourceRef);
 
-      // Get 'tags' subcollection
-      const tagsCollectionRef = collection(resourceRef, 'tags');
-      getDocs(tagsCollectionRef).then((querySnapshot) => {
-        const tags = querySnapshot.docs.map(doc => doc.id); 
-        setNewResourceTags(tags); 
-        setSelectedTags(tags); 
-      });
-      
       if (resourceDoc.exists()) {
         const data = resourceDoc.data();
         if (data) {
@@ -72,6 +68,11 @@ export const UpdateResource = () => {
           setNewResourceLink(data.link);
           setNewResourcePublisher(data.publisher);
           setNewResourceType(data.type);
+          setNewResourceTags(data.tags); 
+          setSelectedTags(data.tags); 
+          setNewResourceUserID(data.userID);
+          setNewResourceUpvote(data.upvote);
+          setNewResourceCreateDate(data.createDate);
           setOldResourceLogo(data.logoURL);
           setOldResourceScreenshots(data.imageURL);
         } else {
@@ -85,10 +86,7 @@ export const UpdateResource = () => {
     getResourceData();
   }, [id]);
 
-  // Handle situation when the user is not logged in
-  if (!userID) { return; }
-
-  // Update resource information
+  // Update pending resource information
   const onUpdateResource = async () => {
     try {
       // Check if all fields filled
@@ -103,6 +101,7 @@ export const UpdateResource = () => {
         const logoStorageRef = ref(storage, `ResourceLogos/${newResourceLogo.name}`);
         const logoUploadTask = uploadBytesResumable(logoStorageRef, newResourceLogo);
         logoDownloadURL = await uploadLogo(logoUploadTask);
+        setNewResourceLogoURL(logoDownloadURL);
       }
   
       let screenshotDownloadURLs;
@@ -127,72 +126,37 @@ export const UpdateResource = () => {
         type: newResourceType,
       };
       
-      // If user uploads the logo image
+      // If admin changes the logo image
       if (logoDownloadURL) {
         resourceData.logoURL = logoDownloadURL;
+      } else {
+        resourceData.logoURL = oldResourceLogo; 
       }
       
-      // If user uploads new resource screenshots
+      // If admin changes the new resource screenshots
       if (screenshotDownloadURLs) {
         resourceData.imageURL = [...oldResourceScreenshots, ...screenshotDownloadURLs];
+        setNewResourceScreenshotsURL(resourceData.imageURL);
       } else {
-        // If user didn't upload new resource screenshots, and only delete existed screenshots
+        // If admin didn't upload new resource screenshots, and only delete existed screenshots
         resourceData.imageURL = [...oldResourceScreenshots];
+        setNewResourceScreenshotsURL(resourceData.imageURL);
       }
 
-      const docRef = doc(db, "Resources", id);
+      const docRef = doc(db, "PendingResources", id);
       await updateDoc(docRef, resourceData);
       
       // Update the tags of resource
-      const currentTags = await getCurrentTags(docRef);
-      const tagsToAdd = newResourceTags.filter(tag => !currentTags.includes(tag));
-      const tagsToDelete = currentTags.filter(tag => !newResourceTags.includes(tag));
+      setNewResourceTags([...selectedTags]);
 
-      const tagsCollectionRef = collection(docRef, "tags");
-
-      // Delete tag docs not included in newResourceTags
-      for (let oldTag of tagsToDelete) {
-        // Update the tag subcollection under resource doc
-        const tagRef = doc(tagsCollectionRef, oldTag);
-        await deleteDoc(tagRef);
-
-        // Update corresponding doc in the Tags collection
-        const tagDocRef = doc(db, 'Tags', oldTag);
-        await updateDoc(tagDocRef, {
-            resources: arrayRemove(docRef.id),
-        });
-      }
-
-      // Add newly added tags
-      for (const tag of tagsToAdd) {
-        // Update the tag subcollection under resource doc
-        const tagRef = doc(tagsCollectionRef, tag);
-        await setDoc(tagRef, {}); // Create an empty doc for the new tag
-
-        // Update corresponding doc in the Tags collection
-        const tagDocRef = doc(db, 'Tags', tag);
-        await setDoc(tagDocRef, {
-          resources: arrayUnion(docRef.id),
-        }, { merge: true });
-      } 
-  
-      // Clear the input form
-      setNewResourceName("");
-      setNewResourceDesc("");
-      setNewResourceLongDesc("");
-      setNewResourceLink("");
-      setNewResourcePublisher("");
-      setNewResourceTags([]);
-      setNewResourceScreenshots([]);
-      setNewResourceLogo(null);
-  
       // Push to success page
-      navigate('/success');
+      alert("Update Pending Resource Success");
     } catch (err) {
       console.log(err);
     }
   };
-  
+
+
   const uploadLogo = async (logoUploadTask) => {
     return new Promise((resolve, reject) => {
       logoUploadTask.on('state_changed',
@@ -219,23 +183,10 @@ export const UpdateResource = () => {
         }
       );
     });
-  }  
-
-  const getCurrentTags = async (docRef) => {
-    const tagsCollectionRef = collection(docRef, "tags");
-    const querySnapshot = await getDocs(tagsCollectionRef);
-    const currentTags = querySnapshot.docs.map(doc => doc.id);
-    return currentTags;
-  };
+  }
 
   const handleTagChange = (e) => {
     const tag = e.target.value;
-    setNewResourceTags(newResourceTags => {
-      if (!newResourceTags.includes(tag)) {
-        return [...newResourceTags, tag];
-      }
-      return newResourceTags;
-    });
     setSelectedTags(selectedTags => {
       if (!selectedTags.includes(tag)) {
         return [...selectedTags, tag];
@@ -246,7 +197,6 @@ export const UpdateResource = () => {
 
   const removeTag = (tagToRemove) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
-    setNewResourceTags(newResourceTags.filter(tag => tag !== tagToRemove));
   }
 
   const handleDeleteOldScreenshot = (index) => {
@@ -307,6 +257,97 @@ export const UpdateResource = () => {
       return;
     }
     setNewResourceScreenshots(oldScreenshots => [...oldScreenshots, ...Array.from(files)]);
+  }
+
+  // Approve new resouce action
+  const approveResource = async () => {
+    try {
+      // Add pending resource to confirmed resource collection
+      const docRef = await addDoc(collection(db, 'Resources'), {
+        name: newResourceName,
+        desc: newResourceDesc,
+        longDesc: newResourceLongDesc,
+        link: newResourceLink,
+        publisher: newResourcePublisher,
+        upvote: newResourceUpvote,
+        createDate: newResourceCreateDate,
+        type: newResourceType,
+        userID: newResourceUserID,
+        logoURL: newResourceLogoURL ? newResourceLogoURL : oldResourceLogo,
+        imageURL: newResourceScreenshotsURL
+      });
+
+      // Add tags as a subcollection of resource doc & create tag docs
+      const tagsCollectionRef = collection(docRef, "tags");
+      await Promise.all(newResourceTags.map(async (tagName) => {
+          const tagRef = doc(tagsCollectionRef, tagName);
+          await setDoc(tagRef, {}); 
+
+          // Add resource to tag document in the Tags collection at top level
+          const tagDocRef = doc(db, 'Tags', tagName);
+          await setDoc(tagDocRef, {
+            resources: arrayUnion(docRef.id),
+          }, { merge: true }); 
+      }));
+
+      // Add approved resource id to user
+      const userDocRef = doc(db, 'users', newResourceUserID);
+      await updateDoc(userDocRef, {
+        submittedPosts: arrayUnion(docRef.id),
+      });
+  
+      // Delete pending resource doc from 'PendingResources' collection
+      // (1) Delete the 'tags' subcollection of pending resource doc
+      const tagsCollectionPendingRef = collection(doc(db, "PendingResources", id), 'tags');
+      const tagsSnapshot = await getDocs(tagsCollectionPendingRef);
+      await Promise.all(tagsSnapshot.docs.map(async (docSnap) => {
+          const tag = docSnap.id; // Document id is the tag name
+          await deleteDoc(doc(tagsCollectionRef, tag));
+      }));
+      // (2) Delete the Pending resource doc
+      await deleteDoc(doc(db, 'PendingResources', id));
+
+      // Delete pending resource id from user
+      await updateDoc(userDocRef, {
+        pendingPosts: arrayRemove(id),
+      });
+      // Alert success
+      alert("New Resource has been approved!");
+      await delay(1500);
+      // Push to admin page
+      navigate('/admin');
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  // Reject new resouce action
+  const rejectResource = async () => {
+    try {
+      // Delete pending resource doc from 'PendingResources' collection
+      // (1) Delete the 'tags' subcollection of pending resource doc
+      const tagsCollectionPendingRef = collection(doc(db, "PendingResources", id), 'tags');
+      const tagsSnapshot = await getDocs(tagsCollectionPendingRef);
+      tagsSnapshot.docs.forEach(async (docSnap) => {
+          const tag = docSnap.id; // Document id is the tag name
+          await deleteDoc(doc(tagsCollectionPendingRef, tag));
+      });
+      // (2) Delete the Pending resource doc
+      await deleteDoc(doc(db, 'PendingResources', id));
+
+      // Delete pending resource id from user
+      const userDocRef = doc(db, 'users', newResourceUserID);
+      await updateDoc(userDocRef, {
+        pendingPosts: arrayRemove(id),
+      });
+      // Alert success
+      alert("New Resource has been denied!");
+      await delay(1500);
+      // Push to admin page
+      navigate('/admin');
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   return (
@@ -418,7 +459,9 @@ export const UpdateResource = () => {
       </div>
     ))}
 
-    <button onClick={onUpdateResource}>Submit</button>
+    <button onClick={onUpdateResource}>Update</button>
+    <button onClick={() => approveResource()}>Approve</button>
+    <button onClick={() => rejectResource()}>Reject</button>
   </div>
   );
-};
+}

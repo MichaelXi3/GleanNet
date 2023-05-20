@@ -74,12 +74,11 @@ const handleUpvote = async (id, currentUserUID) => {
       <div className="resource-banner-details">
         <h2 className="resource-banner-name">{resourceData.name}</h2>
         <p className="resource-banner-desc">{resourceData.desc}</p>
-        <p className="resource-banner-info">Upvotes: {resourceData.upvote}</p>
         <p className="resource-banner-info">Type: {resourceData.type}</p>
-        <p className="resource-banner-info">Author: {resourceData.publisher}</p>
+        {/* <p className="resource-banner-info">Author: {resourceData.publisher}</p> */}
         <Link to={`/resources/${resource.id}`} className="resource-banner-link">View Details</Link>
-        <button onClick={() => handleUpvote(resource.id, currentUserUID)}> Upvote </button>
       </div>
+      <button onClick={() => handleUpvote(resource.id, currentUserUID)}>Upvote {resourceData.upvote}</button>
     </div>
   );
 }

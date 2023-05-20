@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, updateDoc, arrayUnion, getDocs } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db } from '../config/firebase';
@@ -19,15 +19,30 @@ export const CreateResource = () => {
   // Tag related states
   const [newResourceTags, setNewResourceTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [tagOptions, setTagOptions] = useState([
-    'Computer Security', 'Computer System', 'AI Tool', 'Productivity Tool', 'Web Development',
-    'App Developement', 'Android', 'Linux', 'Backend'
-  ]); 
+  const [tagOptions, setTagOptions] = useState([]); 
 
   const resourceCollection = collection(db, "Resources");
   const navigate = useNavigate();
   const auth = getAuth();
   const userID = auth.currentUser?.uid;
+
+  // Get all tag names from Firestore
+  useEffect(() => {
+    const getTags = async () => {
+      try {
+        const tagCollectionRef = collection(db, 'Tags');
+        const tagSnapshot = await getDocs(tagCollectionRef);
+
+        const tags = tagSnapshot.docs.map(doc => doc.id); // Document id is the tag name
+        setTagOptions(tags);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    getTags();
+  }, []);
+
   // Handle situation when the user is not logged in
   if (!userID) { return; }
   
@@ -87,8 +102,9 @@ export const CreateResource = () => {
 
             // Handle resource screenshots images URL by 'Promise.all' - multiple images
             Promise.all(screenshotUploadTasks).then(async (screenshotDownloadURLs) => {
+              const pendingResourceCollection = collection(db, "PendingResources");
               // Add the new resource to Firestore, including the screenshots URL and tags
-              const docRef = await addDoc(resourceCollection, {
+              const docRef = await addDoc(pendingResourceCollection, {
                 name: newResourceName,
                 desc: newResourceDesc,
                 longDesc: newResourceLongDesc,
@@ -99,27 +115,14 @@ export const CreateResource = () => {
                 imageURL: screenshotDownloadURLs,
                 createDate: newResourceCreateDate,
                 type: newResourceType,
+                tags: newResourceTags,
                 userID: userID
-              });
-            
-              // Add tags as a subcollection of resource doc & create tag docs
-              const tagsCollectionRef = collection(docRef, "tags");
-              newResourceTags.forEach(async (tagName) => {
-                  tagName = tagName.trim();
-                  const tagRef = doc(tagsCollectionRef, tagName);
-                  await setDoc(tagRef, {}); 
-
-                  // Add resource to tag document in the Tags collection at top level
-                  const tagDocRef = doc(db, 'Tags', tagName);
-                  await setDoc(tagDocRef, {
-                    resources: arrayUnion(docRef.id),
-                  }, { merge: true }); 
               });
 
               // Update user document to add the new resource docID
               const userDocRef = doc(db, 'users', userID);
               await updateDoc(userDocRef, {
-                submittedPosts: arrayUnion(docRef.id),
+                pendingPosts: arrayUnion(docRef.id),
               });
 
               // Clear the input form

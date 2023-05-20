@@ -13,6 +13,8 @@ import { RegisterSuccess } from './pages/registrationSuccessPage';
 import { UserDetail } from './pages/userDetailPage';
 import { CategoriesPage } from './pages/categoriesPage';
 import { ResourceListByCategory } from './components/resourceListByCategory';
+import { AdminPage } from './admin/adminPage';
+import { ResourceReviewPageAdmin } from './admin/resourceReviewPageAdmin';
 import { MainPage } from './pages/mainPage';
 
 function App() {
@@ -38,6 +40,8 @@ function App() {
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<Auth />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/resource-review/:id" element={<ResourceReviewPageAdmin />} />
         <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/categories/:category" element={<ResourceListByCategory />} />
         <Route path="/user-detail" element={<UserDetail />} />

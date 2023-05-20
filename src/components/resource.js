@@ -59,14 +59,17 @@ export const Resource = ({ resource, onDelete }) => {
     // Delete the 'tags' subcollection of resource doc and update the Tags collection
     const tagsCollectionRef = collection(resourceDoc, 'tags');
     const tagsSnapshot = await getDocs(tagsCollectionRef);
-    tagsSnapshot.docs.forEach(async (docSnap) => {
-        const tag = docSnap.id; // Document id is the tag name
-        const tagDocRef = doc(db, 'Tags', tag);
-        await updateDoc(tagDocRef, {
-          resources: arrayRemove(id),
-        });
-        await deleteDoc(doc(tagsCollectionRef, tag));
-    });
+    await Promise.all(tagsSnapshot.docs.map(async (docSnap) => {
+      const tag = docSnap.id; // Document id is the tag name
+      const tagDocRef = doc(db, 'Tags', tag);
+      
+      // Remove the resource id from the Tags collection - tag name doc's resource array
+      await updateDoc(tagDocRef, {
+        resources: arrayRemove(id),
+      });
+      // Delete the tag from the resource's tags subcollection
+      await deleteDoc(doc(tagsCollectionRef, tag));
+    }));
 
     // Delete the resource doc
     await deleteDoc(resourceDoc);
