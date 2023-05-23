@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider } from "firebase/auth"
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFunctions } from 'firebase/functions';
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage';
 
@@ -14,10 +15,10 @@ const firebaseConfig = {
   measurementId: "G-DGWP4DP545"
 };
 
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleAuthProvider = new GoogleAuthProvider();
 export const storage = getStorage(app); 
 
 export const db = getFirestore(app);
+const analytics = getAnalytics(app);

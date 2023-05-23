@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { CategoryBanner } from '../components/categoryBanner';
+import { Loading } from './loadingPage';
 
 
 export const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Fetch all available categories
   useEffect(() => {
@@ -16,7 +18,13 @@ export const CategoriesPage = () => {
     }
 
     fetchCategories();
+    setIsLoading(false);
   }, []);
+
+
+  if(isLoading) {
+    return <Loading />;
+  }
 
   return (
     <div>

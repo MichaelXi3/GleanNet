@@ -4,6 +4,7 @@ import { collection, addDoc, doc, setDoc, updateDoc, arrayUnion, getDocs } from 
 import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db } from '../config/firebase';
+import { Loading } from '../pages/loadingPage';
 import '../style/CreateResourceComponent.css';
 
 export const CreateResource = () => {
@@ -19,9 +20,9 @@ export const CreateResource = () => {
   // Tag related states
   const [newResourceTags, setNewResourceTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [tagOptions, setTagOptions] = useState([]); 
+  const [tagOptions, setTagOptions] = useState([]);
 
-  const resourceCollection = collection(db, "Resources");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const auth = getAuth();
   const userID = auth.currentUser?.uid;
@@ -49,6 +50,7 @@ export const CreateResource = () => {
   // Upload the resource to Firestore and Firebase Storage
   const onSubmitResource = async () => {
     try {
+      setIsLoading(true);
       const storage = getStorage();
       const newResourceCreateDate = new Date().toISOString().slice(0, 10);
       const newResourceUpvote = 0;
@@ -139,6 +141,7 @@ export const CreateResource = () => {
       );
       // Push to success page
       navigate('/success');
+      setIsLoading(false);
     } catch (err) {
       console.log(err);
     }
@@ -209,6 +212,9 @@ export const CreateResource = () => {
     setNewResourceScreenshots(oldScreenshots => [...oldScreenshots, ...Array.from(files)]);
   }
 
+  if(isLoading) {
+    return <Loading />;
+  }
 
   return (
     <div className='create-resource'>

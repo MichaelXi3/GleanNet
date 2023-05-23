@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { collection, doc, setDoc, deleteDoc, updateDoc, arrayUnion, getDoc, getDocs, arrayRemove, addDoc } from 'firebase/firestore';
-import { getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db } from '../config/firebase';
 import '../style/CreateResourceComponent.css';
-import userEvent from '@testing-library/user-event';
 
 export const ResourceReviewPageAdmin = () => {
   // Get current resource id from URL
@@ -124,6 +122,7 @@ export const ResourceReviewPageAdmin = () => {
         link: newResourceLink,
         publisher: newResourcePublisher,
         type: newResourceType,
+        tags: [...selectedTags] // Update the tags of resource in doc
       };
       
       // If admin changes the logo image
@@ -145,10 +144,10 @@ export const ResourceReviewPageAdmin = () => {
 
       const docRef = doc(db, "PendingResources", id);
       await updateDoc(docRef, resourceData);
-      
-      // Update the tags of resource
-      setNewResourceTags([...selectedTags]);
 
+      // Update the local state of tags
+      setNewResourceTags([...selectedTags]);
+      
       // Push to success page
       alert("Update Pending Resource Success");
     } catch (err) {
@@ -297,14 +296,6 @@ export const ResourceReviewPageAdmin = () => {
       });
   
       // Delete pending resource doc from 'PendingResources' collection
-      // (1) Delete the 'tags' subcollection of pending resource doc
-      const tagsCollectionPendingRef = collection(doc(db, "PendingResources", id), 'tags');
-      const tagsSnapshot = await getDocs(tagsCollectionPendingRef);
-      await Promise.all(tagsSnapshot.docs.map(async (docSnap) => {
-          const tag = docSnap.id; // Document id is the tag name
-          await deleteDoc(doc(tagsCollectionRef, tag));
-      }));
-      // (2) Delete the Pending resource doc
       await deleteDoc(doc(db, 'PendingResources', id));
 
       // Delete pending resource id from user
@@ -313,7 +304,7 @@ export const ResourceReviewPageAdmin = () => {
       });
       // Alert success
       alert("New Resource has been approved!");
-      await delay(1500);
+      // await delay(1500);
       // Push to admin page
       navigate('/admin');
     } catch (err) {
@@ -325,14 +316,6 @@ export const ResourceReviewPageAdmin = () => {
   const rejectResource = async () => {
     try {
       // Delete pending resource doc from 'PendingResources' collection
-      // (1) Delete the 'tags' subcollection of pending resource doc
-      const tagsCollectionPendingRef = collection(doc(db, "PendingResources", id), 'tags');
-      const tagsSnapshot = await getDocs(tagsCollectionPendingRef);
-      tagsSnapshot.docs.forEach(async (docSnap) => {
-          const tag = docSnap.id; // Document id is the tag name
-          await deleteDoc(doc(tagsCollectionPendingRef, tag));
-      });
-      // (2) Delete the Pending resource doc
       await deleteDoc(doc(db, 'PendingResources', id));
 
       // Delete pending resource id from user
@@ -342,7 +325,7 @@ export const ResourceReviewPageAdmin = () => {
       });
       // Alert success
       alert("New Resource has been denied!");
-      await delay(1500);
+      // await delay(1500);
       // Push to admin page
       navigate('/admin');
     } catch (err) {

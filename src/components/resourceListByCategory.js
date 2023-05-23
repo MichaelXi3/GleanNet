@@ -3,6 +3,7 @@ import { collection, query, where, orderBy, getDoc, doc } from 'firebase/firesto
 import { db } from '../config/firebase';
 import { useParams } from 'react-router-dom';
 import { ResourceBanner } from './resourceBanner';
+import { Loading } from '../pages/loadingPage';
 
 import '../style/ResourceListByCategory.css';
 
@@ -11,6 +12,8 @@ export const ResourceListByCategory = () => {
   const [filteredResources, setFilteredResources] = useState([]); // Resource objects filtered by resource type
   const [resourceTypes, setResourceTypes] = useState([]);         // All available resource types
   const [selectedType, setSelectedType] = useState('All');        // User selected type
+  const [isLoading, setIsLoading] = useState(true);
+
   const { category } = useParams();
   
   // Fetch all resources with current tag
@@ -44,6 +47,7 @@ export const ResourceListByCategory = () => {
     }
       
     fetchResources();
+    setIsLoading(false);
   }, [category]);
 
   // Listen to selection of resource type
@@ -57,6 +61,10 @@ export const ResourceListByCategory = () => {
 
   const handleTypeSelection = (type) => {
     setSelectedType(type);
+  }
+
+  if(isLoading) {
+    return <Loading />;
   }
 
   return (

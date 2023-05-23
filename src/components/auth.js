@@ -1,13 +1,16 @@
-import { auth, googleAuthProvider } from "../config/firebase"
+import { auth, googleAuthProvider } from "../config/firebase";
 import { doc, setDoc } from "firebase/firestore"; 
 import { db } from '../config/firebase';
 import { createUserWithEmailAndPassword, signInWithPopup, signOut, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
+import useAuth from "../routes/useAuth";
 
 import '../style/UserAuth.css'
 
 export const Auth = () => {
+    const { setAuth } = useAuth();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isRegistering, setIsRegistering] = useState(false);
@@ -15,9 +18,7 @@ export const Auth = () => {
     const [error, setError] = useState("");
 
     const navigate = useNavigate();
-
-    console.log("Current User: " + auth?.currentUser?.email);
-    // console.log(auth?.currentUser?.photoURL);
+    console.log("Firebase Current User: " + auth?.currentUser?.email);
 
     const handleError = (err) => {
         switch (err.code) {
@@ -95,6 +96,10 @@ export const Auth = () => {
     const logIn = async () => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
+            const user = auth.currentUser;
+            console.log(user);
+            // const token = await user.getIdTokenResult();
+            // console.log("Admin: ", token.claims.admin);
             navigate('/');
         } catch (err) {
             handleError(err);
@@ -106,6 +111,9 @@ export const Auth = () => {
         try {
             await signInWithPopup(auth, googleAuthProvider);
             const user = auth.currentUser;
+            console.log(user);
+            // const token = await user.getIdTokenResult();
+            // console.log("Admin: ", token.claims.admin);
             await setDoc(doc(db, "users", user.uid), {
                 email: user.email,
                 username: user.displayName,
@@ -179,7 +187,7 @@ export const Auth = () => {
                     <button onClick={signInWithGoogle}> Sign In With Google </button>
                     <button onClick={forgotPassword}> Forgot password? </button>
                     <button onClick={() => setIsRegistering(true)}> Don't have an account? </button>
-                    <button onClick={logOut}> Logout </button>
+                    {/* <button onClick={logOut}> Logout </button> */}
                 </>
             )} 
         </div>

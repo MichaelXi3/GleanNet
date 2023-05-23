@@ -2,14 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { collection, getDocs, addDoc, deleteDoc, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase'; 
 import { ResourceBanner } from './resourceBanner';
+import { Loading } from '../pages/loadingPage';
 
 export const ResourceList = () => {
   const [resourceList, setResourceList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const resourceCollection = collection(db, "Resources");
 
   // Get Resources List right after render is committed to the screen
   useEffect(() => {
     getResourceList();
+    setIsLoading(false);
   }, [])
 
   const getResourceList = async () => {
@@ -37,6 +40,10 @@ export const ResourceList = () => {
 
   const deleteResourceFromState = (id) => {
     setResourceList(resourceList.filter(resource => resource.id !== id));
+  }
+
+  if(isLoading) {
+    return <Loading />;
   }
 
   return (

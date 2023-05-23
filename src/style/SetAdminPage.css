@@ -1,0 +1,35 @@
+.admin-container {
+    max-width: 1000px;
+    padding: 60px 25px;
+}
+
+.admin-info {
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 32px;
+    background-color: #f1f1f1;
+    max-width: 600px;
+    margin: 32px auto;
+}
+
+.admin-input {
+    width: 100%;
+    border: none;
+    height: 50px;
+    padding: 8px;
+    background-color: #f2f7f6;
+}
+
+.admin-input:focus {
+    outline: none;
+}
+
+.admin-message {
+    font-size: 14px;
+}
+
+.admin-button {
+    align-self: center;
+}

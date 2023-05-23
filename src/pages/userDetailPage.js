@@ -2,12 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { auth } from '../config/firebase';
 import { doc, getDoc } from "firebase/firestore"; 
 import { db } from '../config/firebase';
+import { signOut } from "firebase/auth";
+import { useNavigate } from 'react-router-dom';
 import { ResourceBanner } from '../components/resourceBanner';
 import '../style/UserDetailPage.css';
+import { Loading } from './loadingPage';
 
 export const UserDetail = () => {
   const [user, setUser] = useState(null);
   const [resources, setResources] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     auth.onAuthStateChanged(async (user) => {
@@ -42,8 +48,27 @@ export const UserDetail = () => {
         setUser(null);
         setResources([]);
       }
+      setIsLoading(false);
     });
   }, []);
+
+  const logOut = async () => {
+    try {
+        await signOut(auth);
+        console.log("User Logged Out");
+        navigate('/');
+    } catch (err) {
+        console.log(err);
+    }
+  }
+
+  const goToAdminPage = async () => {
+    try {
+        navigate('/admin');
+    } catch (err) {
+        console.log(err);
+    }
+  }
 
   return (
     <div className="user-detail-container">
@@ -61,9 +86,11 @@ export const UserDetail = () => {
               <ResourceBanner key={index} resource={resource} />
             ))}
           </div>
+          <button onClick={logOut}> Logout </button>
+          <button onClick={goToAdminPage}> Admin Page </button>
         </div>
       ) : (
-        <p>No user is currently logged in.</p>
+        <p></p>
       )}
     </div>
   );

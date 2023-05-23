@@ -59,3 +59,15 @@
   padding: 10px;
   background-color: #fff;
 }
+
+.user-detail-info button {
+  margin: 10px;
+  padding: 15px;
+  font-size: 18px;
+  border: none;
+  border-radius: 5px;
+  color: #FFF;
+  background-color: #787878; /* change this to your preferred color */
+  width: 80%;
+  cursor: pointer;
+}
