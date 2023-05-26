@@ -1,45 +1,65 @@
 .auth-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #F5F5F5;
-}
+    width: 90vw;
+    padding: 8% 0 0;
+    margin: auto;
 
-.auth-container input {
-    margin: 10px;
+    @media (min-width: 768px) {
+        width: 50vw;
+      }
+  }
+  
+  .auth-container .form {
+    position: relative;
+    z-index: 1;
+    background: #FFFFFF;
+    max-width: 70vm;
+    margin: 0 auto 100px;
+    padding: 45px;
+    text-align: center;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
+  
+  .auth-container .form input {
+    font-family: "Roboto", sans-serif;
+    outline: 0;
+    background: #f2f2f2;
+    width: 100%;
+    border: 0;
+    margin: 0 0 15px;
     padding: 15px;
-    font-size: 18px;
-    border-radius: 5px;
-    border: 1px solid #CCC;
-    width: 80%;
-}
-
-.auth-container button {
-    margin: 10px;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+  
+  .auth-container .form button {
+    font-family: "Roboto", sans-serif;
+    text-transform: uppercase;
+    outline: 0;
+    background: #adadad;
+    width: 100%;
+    border: 0;
     padding: 15px;
-    font-size: 18px;
-    border: none;
-    border-radius: 5px;
-    color: #FFF;
-    background-color: #008CBA; /* change this to your preferred color */
-    width: 80%;
+    color: #FFFFFF;
+    font-size: 14px;
+    transition: all 0.3s ease;
     cursor: pointer;
-}
+  }
+  
+  .auth-container .form button:hover,
+  .auth-container .form button:active,
+  .auth-container .form button:focus {
+    background: #6e6e6e;
+  }
+  
+  .auth-container .form .message {
+    margin: 15px 0 0;
+    color: #b3b3b3;
+    font-size: 12px;
+  }
+  
+  .auth-container .form .message a {
+    color: #747474;
+    text-decoration: none;
+  }
 
-.auth-container button:hover {
-    background-color: #007B9A; /* slightly darker version of button color */
-}
-
-.auth-container p {
-    color: red;
-    font-weight: bold;
-}
-
-@media (max-width: 600px) {
-    .auth-container input,
-    .auth-container button {
-        width: 90%;
-    }
-}
+  

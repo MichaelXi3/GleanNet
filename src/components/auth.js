@@ -150,7 +150,7 @@ export const Auth = () => {
     return (
         <div className="auth-container">
             {isRegistering ? (
-                <>
+                <div className="form">
                     <h1> Registration </h1>
                     <input 
                         placeholder="Username"
@@ -165,31 +165,29 @@ export const Auth = () => {
                         type="password"
                         onChange={(e) => setPassword(e.target.value)}  
                     />
-                    {error && <p>{error}</p>}
+                    {error && <p className="message">{error}</p>}
                     <button onClick={register}> Register </button> 
                     <button onClick={() => setIsRegistering(false)}> Already have an account? </button>
-                </>
+                </div>
             ) : (
-                <>
+                <div className="form">
                     <h1> Log In </h1>
                     <input 
                         placeholder="Email"
                         onChange={(e) => setEmail(e.target.value)} 
                     />
                     <input 
-
                         placeholder="Password"
                         type="password"
                         onChange={(e) => setPassword(e.target.value)}  
                     />
-                    {error && <p>{error}</p>}
+                    {error && <p className="message">{error}</p>}
                     <button onClick={logIn}> Login </button>
                     <button onClick={signInWithGoogle}> Sign In With Google </button>
                     <button onClick={forgotPassword}> Forgot password? </button>
                     <button onClick={() => setIsRegistering(true)}> Don't have an account? </button>
-                    {/* <button onClick={logOut}> Logout </button> */}
-                </>
+                </div>
             )} 
         </div>
-    );
+    );    
 };

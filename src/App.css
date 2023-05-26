@@ -50,16 +50,27 @@
   align-items: center;
   padding: 20px;
   background-color: #1e293b;
+  flex-wrap: wrap;
 }
 
 .nav-links {
   display: flex;
-  gap: 35px;
+  gap: 20px;
   list-style: none;
+  flex-wrap: wrap;
 }
 
+/* todo: mobile device nav bar */
+@media (max-width: 600px) {
+  .nav-links {
+    justify-content: space-around;
+    flex-direction: column;
+  }
+}
+
+
 .nav-links li a {
-  color: #969595;
+  color: #a9a9a9;
   text-decoration: none;
   font-size: 1.3rem;
   font-weight: 420;

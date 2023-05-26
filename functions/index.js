@@ -89,14 +89,14 @@ exports.notifyAdminsOnNewResource = functions.firestore
         const resourceData = snap.data();
         const subject = `Resource Creation Received: ${resourceData.name}`;
         const html = `
-            <h1>New Resource Uploaded</h1>
-            <p>A new resource has been uploaded.</p>
-            <h2>Resource Details:</h2>
-            <ul>
-                <li><b>Name:</b> ${resourceData.name}</li>
-                <li><b>Description:</b> ${resourceData.desc}</li>
-            </ul>
-        `;
+            New Resource Uploaded
+            
+            Resource Details:
+            
+            1. Name: ${resourceData.name}
+            2. Description: ${resourceData.desc}
+
+            `;
         const adminSnapshot = await db.collection('admins').get();
         const admins = adminSnapshot.docs.map(doc => doc.id);
         
@@ -111,14 +111,14 @@ exports.notifyAdminsOnNewResource = functions.firestore
         const resourceData = snap.data();
         const subject = `Resource Updates Received: ${resourceData.name}`;
         const html = `
-            <h1>Resource Update Received</h1>
-            <p>An update to a resource has been received.</p>
-            <h2>Updated Resource Details:</h2>
-            <ul>
-                <li><b>Name:</b> ${resourceData.name}</li>
-                <li><b>Description:</b> ${resourceData.desc}</li>
-            </ul>
-        `;
+            Resource Update Received
+
+            Updated Resource Details:
+
+            Name: ${resourceData.name}
+            Description: ${resourceData.desc}
+
+            `;
         const adminSnapshot = await db.collection('admins').get();
         const admins = adminSnapshot.docs.map(doc => doc.id);
 
