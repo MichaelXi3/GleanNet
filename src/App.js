@@ -30,13 +30,13 @@ function App() {
             <Link to="/"> Home </Link>
           </li>
           <li>
-            <Link to="/login"> LogIn </Link>
-          </li>
-          <li>
             <Link to="/categories"> Categories </Link>
           </li>
           <li>
             <Link to="/upload"> CreateResource </Link>
+          </li>
+          <li>
+            <Link to="/login"> LogIn </Link>
           </li>
         </ul>
         <UserAvatar />

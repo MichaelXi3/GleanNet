@@ -3,10 +3,11 @@ import { collection, getDocs, addDoc, deleteDoc, updateDoc, doc } from 'firebase
 import { db } from '../config/firebase'; 
 import { ResourceBanner } from './resourceBanner';
 import { Loading } from '../pages/loadingPage';
+import '../style/ResourceList.css';
 
 export const ResourceList = () => {
   const [resourceList, setResourceList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Disable loading
   const resourceCollection = collection(db, "Resources");
 
   // Get Resources List right after render is committed to the screen
@@ -47,11 +48,11 @@ export const ResourceList = () => {
   }
 
   return (
-    <div className='App'>
-      <h1> Resource List </h1>
-      <div>
+    <div className='resource-list'>
+      {/* <h1> Resource List </h1> */}
+      <div className='resource-items'>
         {resourceList.map((resource) => (
-            <div key={resource.id}>
+            <div className='resource-item' key={resource.id}>
               <ResourceBanner resource={resource} />
             </div>
         ))}

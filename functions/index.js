@@ -61,7 +61,7 @@ let mailTransporter = nodemailer.createTransport({
 });
 
 
-// todo: is the following function correct?
+// AWS SES - https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/verified-identities
 const sendEmail = (email, subject, text) => {
     const mailOptions = {
         from: sesEmail,
@@ -87,8 +87,16 @@ exports.notifyAdminsOnNewResource = functions.firestore
     .document("PendingResources/{resourceId}")
     .onCreate(async (snap, context) => {
         const resourceData = snap.data();
-        const subject = `New resource uploaded: ${resourceData.name}`;
-        const text = `A new resource has been uploaded.\n\nResource details:\nName: ${resourceData.name}\nDescription: ${resourceData.desc}`;
+        const subject = `Resource Creation Received: ${resourceData.name}`;
+        const html = `
+            <h1>New Resource Uploaded</h1>
+            <p>A new resource has been uploaded.</p>
+            <h2>Resource Details:</h2>
+            <ul>
+                <li><b>Name:</b> ${resourceData.name}</li>
+                <li><b>Description:</b> ${resourceData.desc}</li>
+            </ul>
+        `;
         const adminSnapshot = await db.collection('admins').get();
         const admins = adminSnapshot.docs.map(doc => doc.id);
         
@@ -97,16 +105,24 @@ exports.notifyAdminsOnNewResource = functions.firestore
         });
     });
 
-exports.notifyAdminsOnResourceUpdate = functions.firestore
+    exports.notifyAdminsOnResourceUpdate = functions.firestore
     .document('PendingUpdates/{resourceId}')
     .onCreate(async (snap, context) => {
         const resourceData = snap.data();
-        const subject = `New resource uploaded: ${resourceData.name}`;
-        const text = `A new resource has been uploaded.\n\nResource details:\nName: ${resourceData.name}\nDescription: ${resourceData.desc}`;
+        const subject = `Resource Updates Received: ${resourceData.name}`;
+        const html = `
+            <h1>Resource Update Received</h1>
+            <p>An update to a resource has been received.</p>
+            <h2>Updated Resource Details:</h2>
+            <ul>
+                <li><b>Name:</b> ${resourceData.name}</li>
+                <li><b>Description:</b> ${resourceData.desc}</li>
+            </ul>
+        `;
         const adminSnapshot = await db.collection('admins').get();
         const admins = adminSnapshot.docs.map(doc => doc.id);
-        
+
         admins.forEach(admin => {
-            sendEmail(admin, subject, text);
+            sendEmail(admin, subject, html);
         });
     });

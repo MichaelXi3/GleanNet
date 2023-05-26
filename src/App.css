@@ -3,7 +3,9 @@
 }
 
 #root {
-  width: 100%;
+  /* width: 100%; */
+  min-width: 100vw;
+  min-height: 100vh;
 }
 
 
@@ -46,9 +48,108 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 20px;
+  background-color: #1e293b;
 }
 
 .nav-links {
   display: flex;
-  gap: 10px;
+  gap: 35px;
+  list-style: none;
+}
+
+.nav-links li a {
+  color: #969595;
+  text-decoration: none;
+  font-size: 1.3rem;
+  font-weight: 420;
+}
+
+.nav-links li a:hover {
+  color: white;
+  transition: color 0.3s ease;
+}
+
+/* Main Page Animation */
+.tag-list {
+  transform: scale(1.1);
+  -webkit-transform: scale(1.1);
+  -moz-transform: scale(1.1);
+  transform-origin: center;
+  width: 45rem;
+  max-width: 90vw;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 1rem 0;
+  position: relative;
+  padding: 1.5rem 0;
+  overflow: hidden;
+}
+
+.loop-slider .inner {
+  display: flex;
+  width: fit-content;
+  animation-name: loop;
+  -webkit-animation-name: loop;
+  -moz-animation-name: loop;
+  animation-timing-function: linear;
+  -webkit-animation-timing-function: linear;
+  -moz-animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  -webkit-animation-iteration-count: infinite;
+  -moz-animation-iteration-count: infinite;
+  animation-direction: var(--direction);
+  -webkit-animation-direction: var(--direction);
+  -moz-animation-direction: var(--direction);
+  animation-duration: var(--duration);
+  -webkit-animation-duration: var(--duration);
+  -moz-animation-duration: var(--duration);
+}
+
+.tag {
+  display: flex;
+  align-items: center;
+  gap: 0 0.2rem;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  background-color: #334155;
+  border-radius: 0.4rem;
+  padding: 0.7rem 1rem;
+  margin-right: 1rem;
+  box-shadow: 
+    0 0.1rem 0.2rem rgb(0 0 0 / 20%),
+    0 0.1rem 0.5rem rgb(0 0 0 / 30%),
+    0 0.2rem 1.5rem rgb(0 0 0 / 40%);
+}
+
+.tag span {
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.fade {
+  pointer-events: none;
+  background: linear-gradient(90deg, #1e293b, transparent 40%, transparent 60%, #1e293b);
+  position: absolute;
+  inset: 0;
+}
+
+@keyframes loop {
+  0% {
+    transform: translateX(0); 
+    -webkit-transform: translateX(0);
+    -moz-transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-25%);
+    -webkit-transform: translateX(-25%);
+    -moz-transform: translateX(-25%);
+  }
+  100% {
+    transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
+    -moz-transform: translateX(-50%);
+  }
 }

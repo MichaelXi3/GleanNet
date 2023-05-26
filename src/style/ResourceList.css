@@ -1,0 +1,33 @@
+.resource-list {
+    width: 100%;
+  }
+  
+  .resource-items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  
+  .resource-item {
+    flex: 0 1 calc(33.3333% - 10px);
+    margin: 5px;
+    animation: fadeIn 2s;
+  }
+  
+  @media (max-width: 900px) {
+    .resource-item {
+      flex: 0 1 calc(50% - 10px);
+    }
+  }
+  
+  @media (max-width: 600px) {
+    .resource-item {
+      flex: 0 1 100%;
+    }
+  }
+  
+  @keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+  }
+  
