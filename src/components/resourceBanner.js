@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, getDoc, arrayRemove, arrayUnion, onSnapshot } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '../config/firebase';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../style/ResourceBanner.css';
 
 export const ResourceBanner = ({ resource }) => {
   const [currentUserUID, setCurrentUserUID] = useState(null);
   const [resourceData, setResourceData] = useState(resource);
+
+  const navigate = useNavigate();
 
   // Fetch user id 
   useEffect(() => {
@@ -63,7 +65,8 @@ const handleUpvote = async (id, currentUserUID) => {
       console.log(`No document found with id: ${id}`);
     }
   } else {
-    alert('Please login first before upvote.');
+    // alert('Please login first before upvote.');
+    navigate('/login');
   }
 }
 

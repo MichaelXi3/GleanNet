@@ -5,6 +5,8 @@ import { ResourceBannerAdmin } from './resourceBannerAdmin';
 import { ResourceUpdateBannerAdmin } from './resourceUpdateBannerAdmin';
 import { Loading } from '../pages/loadingPage';
 
+import "../style/AdminPage.css";
+
 export const AdminPage = () => {
   const [pendingResources, setPendingResources] = useState([]);
   const [pendingUpdates, setPendingUpdates] = useState([]);
@@ -56,21 +58,21 @@ export const AdminPage = () => {
   }
 
   return (
-    <div className='App'>
+    <div className='admin-panel'>
       <h1>Admin Panel</h1>
-      {/* Category selection buttons */}
-      <div>
+      {/* Category Button */}
+      <div className="admin-panel__category-buttons">
         {categories.map(category => (
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={selectedCategory === category ? 'selected' : ''}
+            className={selectedCategory === category ? 'admin-panel__button--selected' : 'admin-panel__button'}
           >
             {category}
           </button>
         ))}
       </div>
-      {/* List display based on the selected category */}
+      {/* Pending Resource List */}
       <div>
         {selectedCategory === 'PendingResources' && pendingResources.map((resource) => {
             if (resource && resource.id) {
@@ -82,7 +84,7 @@ export const AdminPage = () => {
             }
             return null;
         })}
-  
+
         {selectedCategory === 'PendingUpdates' && pendingUpdates.map((update) => {
             if (update && update.id) {
                 return (

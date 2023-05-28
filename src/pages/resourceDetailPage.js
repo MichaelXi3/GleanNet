@@ -33,7 +33,7 @@ export const ResourceDetailPage = () => {
   }, [id]); // useEffect hook runs whenever id changes
 
   const handleDelete = (id) => {
-    // Navigate to main page
+    alert('Resource has been successfully deleted')
     navigate('/');
   }
 

@@ -134,13 +134,23 @@ export const ResourceReviewPageAdmin = () => {
       
       // If admin changes the new resource screenshots
       if (screenshotDownloadURLs) {
-        resourceData.imageURL = [...oldResourceScreenshots, ...screenshotDownloadURLs];
+        resourceData.imageURL = [];
+        for (let i = 0; i < oldResourceScreenshots.length; i++) {
+            resourceData.imageURL.push(oldResourceScreenshots[i]);
+        }
+        for (let i = 0; i < screenshotDownloadURLs.length; i++) {
+            resourceData.imageURL.push(screenshotDownloadURLs[i]);
+        }
         setNewResourceScreenshotsURL(resourceData.imageURL);
-      } else {
+    } else {
         // If admin didn't upload new resource screenshots, and only delete existed screenshots
-        resourceData.imageURL = [...oldResourceScreenshots];
+        resourceData.imageURL = [];
+        for (let i = 0; i < oldResourceScreenshots.length; i++) {
+            resourceData.imageURL.push(oldResourceScreenshots[i]);
+        }
         setNewResourceScreenshotsURL(resourceData.imageURL);
-      }
+    }
+    
 
       const docRef = doc(db, "PendingResources", id);
       await updateDoc(docRef, resourceData);
@@ -273,7 +283,7 @@ export const ResourceReviewPageAdmin = () => {
         type: newResourceType,
         userID: newResourceUserID,
         logoURL: newResourceLogoURL ? newResourceLogoURL : oldResourceLogo,
-        imageURL: newResourceScreenshotsURL
+        imageURL: newResourceScreenshotsURL.length === 0 ? oldResourceScreenshots : newResourceScreenshotsURL
       });
 
       // Add tags as a subcollection of resource doc & create tag docs

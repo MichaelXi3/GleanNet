@@ -1,0 +1,241 @@
+.resource-detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 20px;
+}
+
+.resource-detail .flexbox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px;
+    /* border-bottom: 1px solid #ddd; */
+}
+
+.resource-detail .flexbox:nth-child(odd) {
+    background-color: #f8f8f8;
+    border-radius: 5px;
+}
+
+
+
+/* Flexbox 1: Resource logo + Resource basic info */
+
+.resource-detail .flexbox .logo-info {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    margin: 20px 0;
+}
+
+.resource-detail .flexbox .logo-info .logo {
+    width: 110px;
+    height: 110px;
+    border-radius: 5px;
+}
+
+.resource-detail .flexbox .logo-info .info {
+    display: flex;
+    flex-direction: column;
+    margin-left: 30px;
+    align-items:first baseline;
+}
+
+.resource-detail .flexbox .logo-info .info h1 {
+    font-size: 1.4rem !important;
+    margin: 3px;
+}
+
+.resource-detail .flexbox .logo-info .info p {
+    font-weight: 400 !important;
+    margin: 2px;
+}
+
+.resource-detail .flexbox .logo-info .info .tags {
+    margin-top: 5px;
+    display: flex;
+    gap: 5px;
+}
+
+.resource-detail .flexbox .logo-info .info .tags .tag-button {
+    position: relative;
+    overflow: hidden;
+    padding: 10px;
+    font-size: .75rem !important;
+    font-weight:bold;
+    line-height: 1rem !important;
+    background-color: #cacaca;
+    border: none;
+    border-radius: 5px;
+    color: #3b3b3b;
+    transition: all 0.3s ease;
+}
+
+.resource-detail .flexbox .logo-info .info .tags .tag-button:hover {
+    background-color: #a8a8a8;
+    color: #fff;
+}
+
+.resource-detail .flexbox .logo-info .info .tags .tag-button:active {
+    background-color: #888;
+}
+
+
+
+/* Flexbox 2: Resource access and upvote button */
+
+.resource-detail .flexbox .access-upvote {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+}
+.resource-detail .flexbox .access-button,
+.resource-detail .flexbox .upvote-button,
+.resource-detail .flexbox .delete-update button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px 10px;
+
+    font-size: 1rem !important;
+    font-weight: bold;
+
+    border: 1px solid #ccc;    /* Subtle border */
+    border-radius: 12px;         /* Rounded corners */
+    color: #333;               /* Darker text */
+    background-color: #f0f0f0; /* Lighter background */
+    cursor: pointer;
+    flex: 1;                     /* Makes the buttons fill their container */
+    transition: all 0.3s ease;   /* Smooth color transition */
+    text-decoration: none;
+}
+
+.resource-detail .flexbox .access-button {
+    flex: 1; /* Takes up 1/3 of the space */
+    margin-right: 5px;
+}
+.resource-detail .flexbox .upvote-button {
+    flex: 2; /* Takes up 2/3 of the space */
+    background-color: #404040;
+    color: #f0f0f0;     
+    margin-left: 5px;
+}
+
+.resource-detail .flexbox .access-button:hover,
+.resource-detail .flexbox .upvote-button:hover,
+.resource-detail .flexbox .delete-update button:hover {
+    background-color: #ddd; 
+    color: #000; 
+}
+
+.resource-detail .flexbox .access-button:active,
+.resource-detail .flexbox .upvote-button:active,
+.resource-detail .flexbox .delete-update button:active {
+    background-color: #ccc; 
+}
+
+
+
+/* Flexbox 3: Resource Screenshots */
+
+.resource-detail .screenshots {
+    width: 100%;
+    height: auto;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    overflow: auto;
+    position: relative;
+    scroll-behavior: smooth;
+    flex-wrap: nowrap;
+}
+  
+.resource-detail .screenshots .screenshot-item {
+    min-width: 450px;
+    height: 330px;
+    margin: 1px 10px;
+    cursor: pointer;
+    border: 1px solid white;
+    overflow: auto;
+}
+  
+.resource-detail .screenshots .screenshot-item img {
+    width: 100%;
+    height: 100%;
+}
+
+@media (min-width: 600px) {
+    .resource-detail .screenshots .screenshot-item {
+        min-width: 550px; /* For larger screens */
+        height: 400px;
+    }
+}
+
+
+
+/* Flexbox 4: Resource long description */
+
+.resource-detail .flexbox .longDesc {
+    display: flex;
+    flex-direction: column;
+    align-items:first baseline;
+    width: 100%;
+}
+
+.resource-detail .flexbox .longDesc h1 {
+    font-size: 20px;
+    margin: 3px;
+}
+
+.resource-detail .flexbox .longDesc p {
+    font-weight: 400 !important;
+    margin: 2px;
+    text-align: left;
+}
+
+
+
+/* Flexbox 5: Resource other information */
+
+.resource-detail .flexbox .author-publisher {
+    justify-content: space-evenly;
+}
+
+.resource-detail .flexbox .delete-update {
+    justify-content: flex-end;
+}
+
+
+
+/* mobile view */
+@media (max-width: 600px) {
+    .resource-detail .flexbox {
+        align-items: flex-start;
+    }
+
+    .resource-detail .flexbox .logo {
+        margin-bottom: 10px;
+    }
+
+    .resource-detail .flexbox .info {
+        margin-left: 0;
+    }
+
+    .resource-detail .flexbox .tags {
+        flex-wrap: wrap;
+    }
+
+    .resource-detail .flexbox .access-button,
+    .resource-detail .flexbox .upvote-button,
+    .resource-detail .flexbox .delete-update button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .resource-detail .flexbox .author-publisher {
+        flex-direction: column;
+    }
+}

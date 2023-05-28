@@ -129,6 +129,7 @@ export const UpdateResource = () => {
       const resourceData = {
         referenceID: id,
         name: newResourceName,
+        logoURL: newResourceLogo ? logoDownloadURL : oldResourceLogo,
         desc: newResourceDesc,
         longDesc: newResourceLongDesc,
         link: newResourceLink,
@@ -140,14 +141,8 @@ export const UpdateResource = () => {
         tags: [...selectedTags]
       };
       
-      // If user uploads the logo image
-      if (logoDownloadURL) {
-        resourceData.logoURL = logoDownloadURL;
-        setNewResourceLogoURL(resourceData.logoURL);
-      }
-      
       // If user uploads new resource screenshots
-      if (screenshotDownloadURLs) {
+      if (newResourceScreenshots.length > 0) {
         resourceData.imageURL = [...oldResourceScreenshots, ...screenshotDownloadURLs];
         setNewResourceScreenshotsURL(resourceData.imageURL);
       } else {

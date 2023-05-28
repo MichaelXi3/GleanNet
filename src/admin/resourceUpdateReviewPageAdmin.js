@@ -304,7 +304,7 @@ export const ResourceUpdateReviewPageAdmin = () => {
         type: newResourceType,
         userID: newResourceUserID,
         logoURL: newResourceLogoURL ? newResourceLogoURL : oldResourceLogo,
-        imageURL: newResourceScreenshotsURL
+        imageURL: newResourceScreenshotsURL.length === 0 ?  oldResourceScreenshots : newResourceScreenshotsURL,
       });
 
       // (2) Add tags as a subcollection of resource doc & create tag docs

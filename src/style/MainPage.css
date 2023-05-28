@@ -5,7 +5,6 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  font-family: 'Montserrat', sans-serif;
   background: #1e293b;
   color: #f8fafc;
 }
@@ -20,11 +19,11 @@
 
 .main-page header h1 {
   font-weight: 1500;
-  font-size: 5rem;
+  font-size: 4rem;
   margin-bottom: 0.5rem;
   
   @media (min-width: 768px) {
-    font-size: 9rem;
+    font-size: 6rem;
   }
 }
 

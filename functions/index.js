@@ -101,7 +101,7 @@ exports.notifyAdminsOnNewResource = functions.firestore
         const admins = adminSnapshot.docs.map(doc => doc.id);
         
         admins.forEach(admin => {
-            sendEmail(admin, subject, text);
+            sendEmail(admin, subject, html);
         });
     });
 
