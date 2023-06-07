@@ -1,6 +1,6 @@
 # GleanNet
 
-<a href="https://sm.ms/image/gQDvTtsoIwyBC4W" target="_blank"><img src="https://s2.loli.net/2023/06/07/gQDvTtsoIwyBC4W.png" /></a>
+<a href="https://sm.ms/image/cN4uLR2AXfwSeM9" target="_blank"><img src="https://s2.loli.net/2023/06/07/cN4uLR2AXfwSeM9.png" /></a>
 
 `npm start`
 
